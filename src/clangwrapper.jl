@@ -394,6 +394,8 @@ end
 isDeclInvalid(D::pcpp"clang::Decl") = Bool(ccall((:isDeclInvalid,libcxxffi),Cint,(Ptr{Cvoid},),D))
 
 builtinKind(t::pcpp"clang::Type") = ccall((:builtinKind,libcxxffi),Cint,(Ptr{Cvoid},),t)
+isSignedBuiltinType(t::pcpp"clang::Type") = ccall((:isSignedBuiltinType,libcxxffi),Cint,(Ptr{Cvoid},),t) != 0
+isUnsignedBuiltinType(t::pcpp"clang::Type") = ccall((:isUnsignedBuiltinType,libcxxffi),Cint,(Ptr{Cvoid},),t) != 0
 
 const CK_Dependent      = 0
 const CK_BitCast        = 1

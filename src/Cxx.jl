@@ -167,6 +167,7 @@ include("cxxtypes.jl")
 include("clanginstances.jl")
 include("clangwrapper.jl")
 include("typetranslation.jl")
+include("julia_compat.jl")
 include("initialization.jl")
 include("codegen.jl")
 include("cxxmacro.jl")
@@ -181,6 +182,7 @@ end
 
 # Make these available as Cxx.
 import .CxxCore: __default_compiler__, instance, compiler
+import .CxxCore: JuliaCompat
 
 # This is meant to be overriden before using Cxx in the current
 # module if one wants to use a compiler with non standard options.
@@ -199,7 +201,13 @@ export cast,
        addHeaderDir, defineMacro, cxxinclude, cxxparse, new_clang_instance,
        C_User, C_System, C_ExternCSystem
 
-include("CxxREPL/replpane.jl")
+const ENABLE_CXX_REPL = get(ENV, "CXX_ENABLE_REPL", "0") == "1"
+const ENABLE_CXX_EXCEPTIONS = get(ENV, "CXX_ENABLE_EXCEPTIONS", "0") == "1"
+const ENABLE_CXX_PCH = get(ENV, "CXX_ENABLE_PCH", "0") == "1"
+
+if ENABLE_CXX_REPL
+    include("CxxREPL/replpane.jl")
+end
 
 # C++ standard library helpers
 module CxxStd
@@ -215,31 +223,23 @@ end
 # Use as Cxx.
 import .CxxStd: @list
 
-module CxxREPLInit
-    using ..CxxCore
-    using ..CxxREPL
-    function __init__()
-        if isdefined(Base, :active_repl)
-            CxxREPL.RunCxxREPL(CxxCore.__current_compiler__)
-        end
-    end
-end
-
 module CxxExceptionInit
+    using ..Cxx
     using ..CxxCore
-    __init__() = ccall(:jl_generating_output, Cint, ()) == 0 &&
+    __init__() = Cxx.ENABLE_CXX_EXCEPTIONS && !CxxCore.JuliaCompat.generating_output() &&
         eval(:(CxxCore.setup_exception_callback()))
 end
 
 module CxxDumpPCH
+    using ..Cxx
     using ..CxxCore
     # Now that we've loaded Cxx, save everything we just did into a PCH
-    if ccall(:jl_generating_output, Cint, ()) != 0
+    if Cxx.ENABLE_CXX_PCH && CxxCore.JuliaCompat.generating_output()
         append!(CxxCore.GlobalPCHBuffer, CxxCore.decouple_pch(CxxCore.instance(CxxCore.__current_compiler__)))
     end
 end
 
-if ccall(:jl_generating_output, Cint, ()) != 0
+if CxxCore.JuliaCompat.generating_output()
     CxxCore.reset_init!()
 end
 

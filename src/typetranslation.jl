@@ -284,7 +284,7 @@ const InverseMappedTypes = Dict{QualType, Type}()
 isbits_spec(T, allow_singleton = true) = isbitstype(T) && isconcretetype(T) &&
     (allow_singleton || (sizeof(T) > 0 || fieldcount(T) > 0))
 function cpptype(C,::Type{T}) where T
-    (!(T === Union) && !T.abstract) || error("Cannot create C++ equivalent for abstract types")
+    (!(T === Union) && !isabstracttype(T)) || error("Cannot create C++ equivalent for abstract types")
     try
     if !haskey(MappedTypes, T)
         AnonClass = CreateAnonymousClass(C, translation_unit(C))
@@ -308,7 +308,7 @@ function cpptype(C,::Type{T}) where T
             TPs = Any[]
             argtQTs = QualType[]
             for argt in sig.parameters[2:end]
-                if argt.abstract
+                if isabstracttype(argt)
                     TP = ActOnTypeParameter(C,string("param",tparamnum),tparamnum-1)
                     push!(argtQTs,RValueRefernceTo(C,QualType(typeForDecl(TP))))
                     push!(TPs, TP)
@@ -537,27 +537,38 @@ function juliatype(t::QualType, quoted = false, typeargs = Dict{Int,Cvoid}();
             T = CppEnum{Symbol(get_name(t)),T}
         end
     elseif isIntegerType(t)
-        kind = builtinKind(t)
-        if kind == cLong || kind == cLongLong
-            T = Int64
-        elseif kind == cULong || kind == cULongLong
-            T = UInt64
-        elseif kind == cUInt
-            T = UInt32
-        elseif kind == cInt
-            T = Int32
-        elseif kind == cUShort
-            T = UInt16
-        elseif kind == cShort
-            T = Int16
-        elseif kind == cChar_U || kind == cChar_S
-            T = UInt8
-        elseif kind == cSChar
-            T = Int8
+        nbits = 8 * Int(cxxsizeof(instance(__current_compiler__), QualType(t)))
+        if isUnsignedBuiltinType(t)
+            if nbits == 8
+                T = UInt8
+            elseif nbits == 16
+                T = UInt16
+            elseif nbits == 32
+                T = UInt32
+            elseif nbits == 64
+                T = UInt64
+            elseif nbits == 128
+                T = UInt128
+            else
+                error("Unrecognized unsigned integer type with $nbits bits")
+            end
+        elseif isSignedBuiltinType(t)
+            if nbits == 8
+                T = Int8
+            elseif nbits == 16
+                T = Int16
+            elseif nbits == 32
+                T = Int32
+            elseif nbits == 64
+                T = Int64
+            elseif nbits == 128
+                T = Int128
+            else
+                error("Unrecognized signed integer type with $nbits bits")
+            end
         else
-            ccall(:jl_,Cvoid,(Any,),kind)
-            dump(t)
-            error("Unrecognized Integer type")
+            kind = builtinKind(t)
+            error("Unrecognized Integer type kind $kind")
         end
     elseif isFloatingType(t)
         kind = builtinKind(t)

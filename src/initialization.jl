@@ -400,6 +400,9 @@ end
 
 function initialize_instance!(C; register_boot = true, headers = collectAllHeaders(nostdcxx))
     addHeaders(C, headers)
+    @static if isapple()
+        defineMacro(C, "_VA_LIST_T")
+    end
     register_boot && register_booth(C)
 end
 

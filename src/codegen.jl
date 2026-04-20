@@ -442,7 +442,7 @@ end
 # error.
 function check_args(argt,f)
     for (i,t) in enumerate(argt)
-        if isa(t,Union) || (isa(t,DataType) && t.abstract) || (!isCxxEquivalentType(t) &&
+        if isa(t,Union) || (isa(t,DataType) && isabstracttype(t)) || (!isCxxEquivalentType(t) &&
             !(t <: CxxBuiltinTs))
             error("Got bad type information while compiling $f (got $t for argument $i)")
         end

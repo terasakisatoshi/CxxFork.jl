@@ -2697,6 +2697,18 @@ JL_DLLEXPORT int builtinKind(clang::Type *t)
     return cast<clang::BuiltinType>(t)->getKind();
 }
 
+JL_DLLEXPORT int isSignedBuiltinType(clang::Type *t)
+{
+    assert(isa<clang::BuiltinType>(t));
+    return t->isSignedIntegerType();
+}
+
+JL_DLLEXPORT int isUnsignedBuiltinType(clang::Type *t)
+{
+    assert(isa<clang::BuiltinType>(t));
+    return t->isUnsignedIntegerType();
+}
+
 JL_DLLEXPORT int isDeclInvalid(clang::Decl *D)
 {
   return D->isInvalidDecl();
