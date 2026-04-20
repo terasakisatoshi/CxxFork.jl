@@ -7,5 +7,7 @@ makefile = read(joinpath(@__DIR__, "..", "..", "deps", "BuildBootstrap.Makefile"
     @test occursin("LLVM_ARTIFACT_DIR ?=", makefile)
     @test occursin(raw"LLVM_LIBDIR := $(LLVM_ARTIFACT_DIR)/lib", makefile)
     @test occursin(raw"ifeq ($(OS), WINNT)", makefile)
+    @test occursin("CPPFLAGS += -D_FILE_OFFSET_BITS=64", makefile)
+    @test occursin(raw"CXX := $(CLANG_ARTIFACT_DIR)/tools/clang++.exe", makefile)
     @test occursin(raw"LLVM_LINK_NAME := LLVM-$(firstword $(subst ., ,$(LLVM_VER)))jl", makefile)
 end
