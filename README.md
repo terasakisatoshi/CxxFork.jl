@@ -1,4 +1,4 @@
-## Cxx.jl
+## CxxFork.jl (Originally forked from JuliaInterop/Cxx.jl)
 
 **Please, note that Cxx.jl only works (out of the box) currently with Julia 1.1.x to 1.3.x, i.e. with no currently supported Julia, while those versions can still be downloaded at Julialang.org.**
 **For support of newer Julia versions see [CxxWrap.jl](https://github.com/JuliaInterop/CxxWrap.jl).**
