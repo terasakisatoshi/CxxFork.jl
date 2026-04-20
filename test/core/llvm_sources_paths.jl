@@ -17,4 +17,34 @@ include(joinpath(@__DIR__, "..", "..", "deps", "llvm_sources.jl"))
         "llvm-project-18.1.7.src/clang/include",
         "llvm-project-18.1.7.src/clang/lib",
     ]
+
+    cmd = tar_extract_cmd("/tmp/llvm-project-18.1.7.src.tar.xz", "/tmp"; windows = false)
+    @test collect(cmd) == [
+        "tar",
+        "-xf",
+        "/tmp/llvm-project-18.1.7.src.tar.xz",
+        "-C",
+        "/tmp",
+        "llvm-project-18.1.7.src",
+        "llvm-project-18.1.7.src/llvm/include",
+        "llvm-project-18.1.7.src/clang/include",
+        "llvm-project-18.1.7.src/clang/lib",
+    ]
+
+    windows_cmd = tar_extract_cmd(
+        raw"D:\a\CxxFork.jl\CxxFork.jl\deps\usr\src\llvm-project-18.1.7.src.tar.xz",
+        raw"D:\a\CxxFork.jl\CxxFork.jl\deps\usr\src";
+        windows = true,
+    )
+    @test collect(windows_cmd) == [
+        "tar",
+        "-xf",
+        "/d/a/CxxFork.jl/CxxFork.jl/deps/usr/src/llvm-project-18.1.7.src.tar.xz",
+        "-C",
+        "/d/a/CxxFork.jl/CxxFork.jl/deps/usr/src",
+        "llvm-project-18.1.7.src",
+        "llvm-project-18.1.7.src/llvm/include",
+        "llvm-project-18.1.7.src/clang/include",
+        "llvm-project-18.1.7.src/clang/lib",
+    ]
 end
