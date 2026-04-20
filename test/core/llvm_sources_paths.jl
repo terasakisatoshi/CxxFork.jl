@@ -58,6 +58,10 @@ end
         llvm_artifact_dir = raw"C:\Users\runneradmin\.julia\artifacts\a31fde35ae61c78ae4cd2f5ff2fed153f7297407",
         llvm_generated_include_dir = raw"C:\Users\runneradmin\.julia\artifacts\a31fde35ae61c78ae4cd2f5ff2fed153f7297407\include",
         compat_include_dir = raw"D:\a\CxxFork.jl\CxxFork.jl\deps\usr\include",
+        runtime_path_entries = [
+            raw"C:\Users\runneradmin\.julia\artifacts\zlib\bin",
+            raw"C:\Users\runneradmin\.julia\artifacts\zstd\bin",
+        ],
         existing_path = raw"C:\Windows\System32";
         windows = true,
     )
@@ -71,6 +75,8 @@ end
     @test env["LLVM_GENERATED_INCLUDE_DIR"] == "C:/Users/runneradmin/.julia/artifacts/a31fde35ae61c78ae4cd2f5ff2fed153f7297407/include"
     @test env["LLVM_COMPAT_INCLUDE_DIR"] == "D:/a/CxxFork.jl/CxxFork.jl/deps/usr/include"
     @test env["PATH"] == join([
+        "C:/Users/runneradmin/.julia/artifacts/zlib/bin",
+        "C:/Users/runneradmin/.julia/artifacts/zstd/bin",
         "C:/Users/runneradmin/.julia/artifacts/037bb3cc76618b33c395c8bea304d652d5590d1d/tools",
         "C:/Users/runneradmin/.julia/artifacts/037bb3cc76618b33c395c8bea304d652d5590d1d/bin",
         "C:/Users/runneradmin/.julia/artifacts/a31fde35ae61c78ae4cd2f5ff2fed153f7297407/tools",

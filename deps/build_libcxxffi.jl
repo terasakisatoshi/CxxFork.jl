@@ -33,6 +33,7 @@ function build_libcxxffi(; prefix::AbstractString,
         llvm_artifact_dir = artifacts.llvm_artifact_dir,
         llvm_generated_include_dir = artifacts.llvm_generated_include_dir,
         compat_include_dir = compat_include_dir,
+        runtime_path_entries = artifacts.runtime_path_entries,
     )
 
     make = Sys.isbsd() && !Sys.isapple() ? `gmake` : `make`
@@ -90,6 +91,16 @@ function windows_path_entries(; clang_artifact_dir::AbstractString,
     return entries
 end
 
+function jll_runtime_path_entries(jll)
+    entries = String[]
+    for field in (:PATH_list, :LIBPATH_list)
+        Base.invokelatest(() -> isdefined(jll, field)) || continue
+        append!(entries, Base.invokelatest(() -> collect(getproperty(jll, field))))
+    end
+    unique!(entries)
+    return entries
+end
+
 function build_env_vars(; prefix::AbstractString,
                         base_julia_bin::AbstractString,
                         julia_prefix::AbstractString,
@@ -99,6 +110,7 @@ function build_env_vars(; prefix::AbstractString,
                         llvm_artifact_dir::AbstractString,
                         llvm_generated_include_dir::AbstractString,
                         compat_include_dir::AbstractString,
+                        runtime_path_entries::Vector{String} = String[],
                         existing_path::AbstractString = get(ENV, "PATH", ""),
                         windows::Bool = Sys.iswindows())
     env = Dict(
@@ -113,11 +125,13 @@ function build_env_vars(; prefix::AbstractString,
         "LLVM_COMPAT_INCLUDE_DIR" => make_compatible_path(compat_include_dir; windows),
     )
     if windows
-        path_entries = windows_path_entries(
+        path_entries = String[make_compatible_path(path; windows = true) for path in runtime_path_entries]
+        append!(path_entries, windows_path_entries(
             clang_artifact_dir = clang_artifact_dir,
             llvm_artifact_dir = llvm_artifact_dir,
-        )
+        ))
         !isempty(existing_path) && push!(path_entries, existing_path)
+        unique!(path_entries)
         env["PATH"] = join(path_entries, ';')
     end
     return env
@@ -165,6 +179,7 @@ function ensure_build_artifacts!(llvm_ver::VersionNumber)
         ),
         llvm_artifact_dir = llvm_artifact_dir,
         llvm_generated_include_dir = normpath(joinpath(llvm_artifact_dir, "include")),
+        runtime_path_entries = Sys.iswindows() ? jll_runtime_path_entries(llvm_full_jll) : String[],
     )
 end
 
