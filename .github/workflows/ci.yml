@@ -47,8 +47,18 @@ jobs:
         with:
           version: "1.12"
       - uses: julia-actions/cache@v2
+      - name: Toolchain info
+        shell: bash
+        run: |
+          command -v clang++.exe
+          clang++.exe --version
+          clang++.exe -print-search-dirs
+          command -v gcc.exe || true
+          command -v ld.lld.exe || true
       - name: Build
         shell: bash
+        env:
+          WINDOWS_CLANG_VERBOSE: "1"
         run: julia --project=. -e 'using Pkg; Pkg.build()'
       - name: Smoke
         shell: bash
