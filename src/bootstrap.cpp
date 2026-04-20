@@ -3,7 +3,11 @@
 #define __STDC_CONSTANT_MACROS
 
 #include <iostream>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 #include <cstdlib>
 
 #ifdef NDEBUG
@@ -232,6 +236,26 @@ clang::SourceLocation getTrivialSourceLocation(CxxInstance *Cxx)
 }
 
 static Type *(*f_julia_type_to_llvm)(void *jt, llvm::LLVMContext *ctx, bool *isboxed);
+
+static void *resolve_dynamic_symbol(const char *name)
+{
+#ifdef _WIN32
+    HMODULE handles[] = {
+        GetModuleHandleA(nullptr),
+        GetModuleHandleA("libjulia-internal.dll"),
+        GetModuleHandleA("libjulia.dll"),
+    };
+    for (HMODULE handle : handles) {
+        if (handle) {
+            if (auto symbol = GetProcAddress(handle, name))
+                return reinterpret_cast<void *>(symbol);
+        }
+    }
+    return nullptr;
+#else
+    return dlsym(RTLD_DEFAULT, name);
+#endif
+}
 
 extern "C" {
 
@@ -1682,7 +1706,7 @@ static void finish_clang_init(CxxInstance *Cxx, bool EmitPCH, const char *PCHBuf
 
     _cxxparse(Cxx);
 
-    f_julia_type_to_llvm = (llvm::Type *(*)(void *, llvm::LLVMContext *, bool *))dlsym(RTLD_DEFAULT, "jl_type_to_llvm");
+    f_julia_type_to_llvm = (llvm::Type *(*)(void *, llvm::LLVMContext *, bool *))resolve_dynamic_symbol("jl_type_to_llvm");
     if (!f_julia_type_to_llvm)
         f_julia_type_to_llvm = (llvm::Type *(*)(void *, llvm::LLVMContext *, bool *))julia_type_to_llvm;
 }
