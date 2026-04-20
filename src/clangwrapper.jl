@@ -138,6 +138,8 @@ function CreateFunction(C,rt,argt)
         (Ref{ClangCompiler},Ptr{Cvoid},Ptr{Ptr{Cvoid}},Csize_t),C,rt,cptrarr(argt),length(argt)))
 end
 
+jl_get_llvmc() = ccall((:jl_get_llvmc, libcxxffi), Ptr{Cvoid}, ())
+
 function ExtractValue(C,v::pcpp"llvm::Value",idx)
     pcpp"llvm::Value"(ccall((:create_extract_value,libcxxffi),Ptr{Cvoid},
         (Ref{ClangCompiler},Ptr{Cvoid},Csize_t),C,v,idx))
@@ -634,6 +636,10 @@ getFunction(C, name) =
     pcpp"llvm::Function"(ccall((:getFunction, libcxxffi), Ptr{Cvoid}, (Ref{ClangCompiler}, Ptr{UInt8}, Csize_t), C, name, endof(name)))
 
 getTypeName(C, T) = ccall((:getTypeName, libcxxffi), Any, (Ref{ClangCompiler}, Ptr{Cvoid}), C, T)
+getLLVMFunctionName(F::pcpp"llvm::Function") = ccall((:GetLLVMFunctionName, libcxxffi), Any, (Ptr{Cvoid},), F)
+getLLVMModuleIR(F::pcpp"llvm::Function") = ccall((:GetLLVMModuleIR, libcxxffi), Any, (Ptr{Cvoid},), F)
+
+llvmcall_ir(F::pcpp"llvm::Function") = (getLLVMModuleIR(F), getLLVMFunctionName(F))
 
 GetAddrOfFunction(C, FD) = pcpp"llvm::Constant"(ccall((:GetAddrOfFunction,libcxxffi),Ptr{Cvoid},(Ref{ClangCompiler},Ptr{Cvoid}),C,FD))
 

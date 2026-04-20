@@ -231,15 +231,16 @@ clang::SourceLocation getTrivialSourceLocation(CxxInstance *Cxx)
     return sm.getLocForStartOfFile(sm.getMainFileID());
 }
 
-static Type *(*f_julia_type_to_llvm)(void *jt, bool *isboxed);
+static Type *(*f_julia_type_to_llvm)(void *jt, llvm::LLVMContext *ctx, bool *isboxed);
 
 extern "C" {
 
-JL_DLLEXPORT llvm::Type *julia_type_to_llvm(void *, uint8_t *isboxed)
+JL_DLLEXPORT llvm::Type *julia_type_to_llvm(void *, llvm::LLVMContext *ctx, bool *isboxed)
 {
     if (isboxed)
-        *isboxed = 1;
-    return llvm::PointerType::get(jl_LLVMContext, 0);
+        *isboxed = true;
+    llvm::LLVMContext &Context = ctx ? *ctx : jl_LLVMContext;
+    return llvm::PointerType::get(Context, 0);
 }
 
 extern void jl_error(const char *str);
@@ -658,6 +659,28 @@ JL_DLLEXPORT void *GetAddrOfFunction(CxxInstance *Cxx, clang::FunctionDecl *D)
   return (void*)Cxx->CGM->GetAddrOfFunction(D);
 }
 
+extern void *jl_pchar_to_string(const char *str, size_t len);
+
+JL_DLLEXPORT void *GetLLVMFunctionName(llvm::Function *F)
+{
+  std::string Name = F->getName().str();
+  return jl_pchar_to_string(Name.data(), Name.size());
+}
+
+JL_DLLEXPORT void *GetLLVMModuleIR(llvm::Function *F)
+{
+  std::unique_ptr<llvm::Module> M = llvm::CloneModule(*F->getParent());
+  if (llvm::NamedMDNode *Flags = M->getModuleFlagsMetadata())
+    M->eraseNamedMetadata(Flags);
+  if (llvm::NamedMDNode *Ident = M->getNamedMetadata("llvm.ident"))
+    M->eraseNamedMetadata(Ident);
+  std::string IR;
+  llvm::raw_string_ostream OS(IR);
+  M->print(OS, nullptr);
+  OS.flush();
+  return jl_pchar_to_string(IR.data(), IR.size());
+}
+
 size_t cxxsizeofType(CxxInstance *Cxx, void *t);
 typedef struct cppcall_state {
     // Save previous globals
@@ -772,7 +795,7 @@ static Function *CloneFunctionAndAdjust(CxxInstance *Cxx, Function *F, FunctionT
           CallArgs.push_back(Allocation);
         } else {
           bool isboxed;
-          bool isVoid = f_julia_type_to_llvm(juliatypes[i++], &isboxed)->isVoidTy();
+          bool isVoid = f_julia_type_to_llvm(juliatypes[i++], &jl_LLVMContext, &isboxed)->isVoidTy();
           llvm::IRBuilderBase::InsertPoint IP = builder.saveIP();
           // Go to end of block
           builder.SetInsertPoint(builder.GetInsertBlock());
@@ -820,7 +843,7 @@ static Function *CloneFunctionAndAdjust(CxxInstance *Cxx, Function *F, FunctionT
     Cxx->CGF->Builder.SetInsertPoint(builder.GetInsertBlock(),
         builder.GetInsertPoint());
     bool isboxed = false;
-    Type *retty = f_julia_type_to_llvm(jl_retty, &isboxed);
+    Type *retty = f_julia_type_to_llvm(jl_retty, &jl_LLVMContext, &isboxed);
     if (isboxed || retty->isAggregateType()) {
       auto SrcAddr = clang::CodeGen::Address(
         Call,
@@ -1659,9 +1682,9 @@ static void finish_clang_init(CxxInstance *Cxx, bool EmitPCH, const char *PCHBuf
 
     _cxxparse(Cxx);
 
-    f_julia_type_to_llvm = (llvm::Type *(*)(void *, bool *))dlsym(RTLD_DEFAULT, "julia_type_to_llvm");
+    f_julia_type_to_llvm = (llvm::Type *(*)(void *, llvm::LLVMContext *, bool *))dlsym(RTLD_DEFAULT, "jl_type_to_llvm");
     if (!f_julia_type_to_llvm)
-        f_julia_type_to_llvm = (llvm::Type *(*)(void *, bool *))julia_type_to_llvm;
+        f_julia_type_to_llvm = (llvm::Type *(*)(void *, llvm::LLVMContext *, bool *))julia_type_to_llvm;
 }
 
 JL_DLLEXPORT void init_clang_instance(CxxInstance *Cxx, const char *Triple, const char *CPU, const char *SysRoot, bool EmitPCH,
@@ -1779,7 +1802,6 @@ JL_DLLEXPORT void cleanup_cpp_env(CxxInstance *Cxx, cppcall_state_t *state)
       Cxx->CGM->getTypes().arrangeBuiltinFunctionCall(Cxx->CI->getASTContext().VoidTy, args);
     Cxx->CGF->CurFnInfo = &fnInfo;
     Cxx->CGF->FinishFunction(getTrivialSourceLocation(Cxx));
-    Cxx->CGF->ReturnBlock.getBlock()->eraseFromParent();
     Cxx->CGF->ReturnBlock = Cxx->CGF->getJumpDestInCurrentScope(
       Cxx->CGF->createBasicBlock("return"));
 
