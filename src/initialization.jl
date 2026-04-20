@@ -17,8 +17,38 @@ lib_suffix = ccall(:jl_is_debugbuild, Cint, ()) != 0 ? "-debug" : ""
 else
     const libcxxffi = joinpath(@__DIR__, "..", "deps", "usr", "lib", "libcxxffi"*lib_suffix)
 end
+
+@static if Sys.iswindows()
+    const windows_runtime_dirs = let dirs = String[joinpath(CLANG_ARTIFACT_DIR, "bin")]
+        @isdefined(LLVM_ARTIFACT_DIR) && push!(dirs, joinpath(LLVM_ARTIFACT_DIR, "bin"))
+        dirs
+    end
+else
+    const windows_runtime_dirs = String[]
+end
+
+function ensure_windows_runtime_dirs!()
+    @static Sys.iswindows() || return nothing
+
+    current = get(ENV, "PATH", "")
+    current_entries = isempty(current) ? String[] : split(current, ';'; keepempty = false)
+    additions = [dir for dir in windows_runtime_dirs if isdir(dir) && dir ∉ current_entries]
+    isempty(additions) && return nothing
+
+    ENV["PATH"] = isempty(current) ? join(additions, ';') : string(join(additions, ';'), ';', current)
+    return nothing
+end
 # Set up Clang's global data structures
 function init_libcxxffi()
+    ensure_windows_runtime_dirs!()
+    @static if Sys.iswindows()
+        for dll in [
+            joinpath(LLVM_ARTIFACT_DIR, "bin", "libLLVM-$(Base.libllvm_version.major)jl.dll"),
+            joinpath(CLANG_ARTIFACT_DIR, "bin", "libclang-cpp.dll"),
+        ]
+            isfile(dll) && Libdl.dlopen(dll, Libdl.RTLD_GLOBAL)
+        end
+    end
     # Force libcxxffi to be opened with RTLD_GLOBAL
     Libdl.dlopen(libcxxffi, Libdl.RTLD_GLOBAL)
 end

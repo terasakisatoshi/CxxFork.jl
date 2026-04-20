@@ -30,6 +30,7 @@ function build_libcxxffi(; prefix::AbstractString,
         llvm_ver = llvm_ver,
         llvm_source_root = llvm_source_root,
         clang_artifact_dir = artifacts.clang_artifact_dir,
+        llvm_artifact_dir = artifacts.llvm_artifact_dir,
         llvm_generated_include_dir = artifacts.llvm_generated_include_dir,
         compat_include_dir = compat_include_dir,
     )
@@ -42,6 +43,7 @@ function build_libcxxffi(; prefix::AbstractString,
     return (
         llvm_source_root = llvm_source_root,
         clang_artifact_dir = artifacts.clang_artifact_dir,
+        llvm_artifact_dir = artifacts.llvm_artifact_dir,
     )
 end
 
@@ -77,6 +79,7 @@ function build_env_vars(; prefix::AbstractString,
                         llvm_ver::VersionNumber,
                         llvm_source_root::AbstractString,
                         clang_artifact_dir::AbstractString,
+                        llvm_artifact_dir::AbstractString,
                         llvm_generated_include_dir::AbstractString,
                         compat_include_dir::AbstractString,
                         windows::Bool = Sys.iswindows())
@@ -87,6 +90,7 @@ function build_env_vars(; prefix::AbstractString,
         "LLVM_VER" => string(llvm_ver),
         "LLVM_SOURCE_ROOT" => make_compatible_path(llvm_source_root; windows),
         "CLANG_ARTIFACT_DIR" => make_compatible_path(clang_artifact_dir; windows),
+        "LLVM_ARTIFACT_DIR" => make_compatible_path(llvm_artifact_dir; windows),
         "LLVM_GENERATED_INCLUDE_DIR" => make_compatible_path(llvm_generated_include_dir; windows),
         "LLVM_COMPAT_INCLUDE_DIR" => make_compatible_path(compat_include_dir; windows),
     )
@@ -127,6 +131,7 @@ function ensure_build_artifacts!(llvm_ver::VersionNumber)
     llvm_full_jll = Base.invokelatest(() -> getfield(Main, :LLVM_full_jll))
     return (
         clang_artifact_dir = normpath(Base.invokelatest(() -> getproperty(clang_jll, :artifact_dir))),
+        llvm_artifact_dir = normpath(Base.invokelatest(() -> getproperty(llvm_full_jll, :artifact_dir))),
         llvm_generated_include_dir = normpath(joinpath(Base.invokelatest(() -> getproperty(llvm_full_jll, :artifact_dir)), "include")),
     )
 end

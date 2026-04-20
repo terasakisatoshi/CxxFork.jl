@@ -26,6 +26,7 @@ function main()
         base_julia_src = julia_prefix,
         llvm_source_root = build_info.llvm_source_root,
         clang_artifact_dir = build_info.clang_artifact_dir,
+        llvm_artifact_dir = build_info.llvm_artifact_dir,
         cxx_header_dirs = default_cxx_header_dirs(),
     )
 end
@@ -76,7 +77,7 @@ function default_cxx_header_dirs()
     return dirs
 end
 
-function write_path_file(; base_julia_bin, julia_prefix, base_julia_src, llvm_source_root, clang_artifact_dir, cxx_header_dirs)
+function write_path_file(; base_julia_bin, julia_prefix, base_julia_src, llvm_source_root, clang_artifact_dir, llvm_artifact_dir, cxx_header_dirs)
     contents = """
 const BASE_JULIA_BIN = $(sprint(show, base_julia_bin))
 export BASE_JULIA_BIN
@@ -92,6 +93,9 @@ export LLVM_SOURCE_ROOT
 
 const CLANG_ARTIFACT_DIR = $(sprint(show, clang_artifact_dir))
 export CLANG_ARTIFACT_DIR
+
+const LLVM_ARTIFACT_DIR = $(sprint(show, llvm_artifact_dir))
+export LLVM_ARTIFACT_DIR
 
 const DEFAULT_CXXJL_HEADER_DIRS = $(sprint(show, cxx_header_dirs))
 export DEFAULT_CXXJL_HEADER_DIRS

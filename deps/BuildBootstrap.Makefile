@@ -7,6 +7,7 @@ JULIA_PREFIX ?= $(abspath $(BASE_JULIA_BIN)/..)
 LLVM_VER ?=
 LLVM_SOURCE_ROOT ?=
 CLANG_ARTIFACT_DIR ?=
+LLVM_ARTIFACT_DIR ?=
 LLVM_GENERATED_INCLUDE_DIR ?=
 LLVM_COMPAT_INCLUDE_DIR ?= $(PREFIX)/include
 
@@ -16,6 +17,10 @@ endif
 
 ifeq ($(strip $(CLANG_ARTIFACT_DIR)),)
 $(error CLANG_ARTIFACT_DIR must be set)
+endif
+
+ifeq ($(strip $(LLVM_ARTIFACT_DIR)),)
+$(error LLVM_ARTIFACT_DIR must be set)
 endif
 
 ifeq ($(strip $(LLVM_GENERATED_INCLUDE_DIR)),)
@@ -28,6 +33,7 @@ JULIA_LIBDIR := $(JULIA_PREFIX)/lib
 JULIA_LLVM_LIBDIR := $(JULIA_LIBDIR)/julia
 CLANG_INCLUDE_DIR := $(CLANG_ARTIFACT_DIR)/include
 CLANG_LIBDIR := $(CLANG_ARTIFACT_DIR)/lib
+LLVM_LIBDIR := $(LLVM_ARTIFACT_DIR)/lib
 LLVM_PUBLIC_INCLUDE_DIR := $(LLVM_SOURCE_ROOT)/llvm/include
 CLANG_SOURCE_INCLUDE_DIR := $(LLVM_SOURCE_ROOT)/clang/include
 CLANG_PRIVATE_INCLUDE_DIR := $(LLVM_SOURCE_ROOT)/clang/lib
@@ -46,11 +52,17 @@ SHARED_LDFLAG := -shared
 endif
 
 JULIA_LIB_SEARCH_DIRS := $(JULIA_LIBDIR) $(JULIA_LLVM_LIBDIR)
-LIB_DIRS := $(CLANG_LIBDIR) $(JULIA_LIB_SEARCH_DIRS)
+LIB_DIRS := $(CLANG_LIBDIR) $(LLVM_LIBDIR) $(JULIA_LIB_SEARCH_DIRS)
+ifeq ($(OS), Windows_NT)
+LLVM_LINK_NAME := LLVM-$(firstword $(subst ., ,$(LLVM_VER)))jl
+RPATH_FLAGS :=
+else
+LLVM_LINK_NAME := LLVM
 RPATH_FLAGS := $(foreach dir,$(LIB_DIRS),-Wl,-rpath,$(dir))
+endif
 LDFLAGS += $(addprefix -L,$(LIB_DIRS))
 LDFLAGS += $(RPATH_FLAGS)
-LDLIBS += -lclang-cpp -lLLVM -ljulia
+LDLIBS += -lclang-cpp -l$(LLVM_LINK_NAME) -ljulia
 
 all: $(PREFIX)/lib/libcxxffi.$(SHLIB_EXT) $(PREFIX)/clang_constants.jl
 

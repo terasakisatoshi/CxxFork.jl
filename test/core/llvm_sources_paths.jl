@@ -55,6 +55,7 @@ end
         llvm_ver = v"18.1.7",
         llvm_source_root = raw"D:\a\CxxFork.jl\CxxFork.jl\deps\usr\src\llvm-project-18.1.7",
         clang_artifact_dir = raw"C:\Users\runneradmin\.julia\artifacts\037bb3cc76618b33c395c8bea304d652d5590d1d",
+        llvm_artifact_dir = raw"C:\Users\runneradmin\.julia\artifacts\a31fde35ae61c78ae4cd2f5ff2fed153f7297407",
         llvm_generated_include_dir = raw"C:\Users\runneradmin\.julia\artifacts\a31fde35ae61c78ae4cd2f5ff2fed153f7297407\include",
         compat_include_dir = raw"D:\a\CxxFork.jl\CxxFork.jl\deps\usr\include";
         windows = true,
@@ -65,6 +66,7 @@ end
     @test env["JULIA_PREFIX"] == "C:/hostedtoolcache/windows/julia/1.12.6/x64"
     @test env["LLVM_SOURCE_ROOT"] == "D:/a/CxxFork.jl/CxxFork.jl/deps/usr/src/llvm-project-18.1.7"
     @test env["CLANG_ARTIFACT_DIR"] == "C:/Users/runneradmin/.julia/artifacts/037bb3cc76618b33c395c8bea304d652d5590d1d"
+    @test env["LLVM_ARTIFACT_DIR"] == "C:/Users/runneradmin/.julia/artifacts/a31fde35ae61c78ae4cd2f5ff2fed153f7297407"
     @test env["LLVM_GENERATED_INCLUDE_DIR"] == "C:/Users/runneradmin/.julia/artifacts/a31fde35ae61c78ae4cd2f5ff2fed153f7297407/include"
     @test env["LLVM_COMPAT_INCLUDE_DIR"] == "D:/a/CxxFork.jl/CxxFork.jl/deps/usr/include"
 end
