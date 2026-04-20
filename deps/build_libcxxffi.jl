@@ -23,18 +23,19 @@ function build_libcxxffi(; prefix::AbstractString,
     stage_legacy_source_layout!(prefix, llvm_source_root, artifacts, llvm_ver)
 
     mkpath(prefix)
+    env = build_env_vars(
+        prefix = prefix,
+        base_julia_bin = base_julia_bin,
+        julia_prefix = julia_prefix,
+        llvm_ver = llvm_ver,
+        llvm_source_root = llvm_source_root,
+        clang_artifact_dir = artifacts.clang_artifact_dir,
+        llvm_generated_include_dir = artifacts.llvm_generated_include_dir,
+        compat_include_dir = compat_include_dir,
+    )
 
     make = Sys.isbsd() && !Sys.isapple() ? `gmake` : `make`
-    withenv(
-        "PREFIX" => prefix,
-        "BASE_JULIA_BIN" => base_julia_bin,
-        "JULIA_PREFIX" => julia_prefix,
-        "LLVM_VER" => string(llvm_ver),
-        "LLVM_SOURCE_ROOT" => llvm_source_root,
-        "CLANG_ARTIFACT_DIR" => artifacts.clang_artifact_dir,
-        "LLVM_GENERATED_INCLUDE_DIR" => artifacts.llvm_generated_include_dir,
-        "LLVM_COMPAT_INCLUDE_DIR" => compat_include_dir,
-    ) do
+    withenv((key => value for (key, value) in env)...) do
         run(`$make -f BuildBootstrap.Makefile all -j$(max(Sys.CPU_THREADS, 1))`)
     end
 
@@ -62,6 +63,33 @@ function stage_clang_builtin_headers!(prefix::AbstractString,
     end
     symlink(source_dir, dest_dir)
     return dest_dir
+end
+
+function make_compatible_path(path::AbstractString; windows::Bool = Sys.iswindows())
+    normalized = normpath(path)
+    windows || return normalized
+    return replace(normalized, '\\' => '/')
+end
+
+function build_env_vars(; prefix::AbstractString,
+                        base_julia_bin::AbstractString,
+                        julia_prefix::AbstractString,
+                        llvm_ver::VersionNumber,
+                        llvm_source_root::AbstractString,
+                        clang_artifact_dir::AbstractString,
+                        llvm_generated_include_dir::AbstractString,
+                        compat_include_dir::AbstractString,
+                        windows::Bool = Sys.iswindows())
+    return Dict(
+        "PREFIX" => make_compatible_path(prefix; windows),
+        "BASE_JULIA_BIN" => make_compatible_path(base_julia_bin; windows),
+        "JULIA_PREFIX" => make_compatible_path(julia_prefix; windows),
+        "LLVM_VER" => string(llvm_ver),
+        "LLVM_SOURCE_ROOT" => make_compatible_path(llvm_source_root; windows),
+        "CLANG_ARTIFACT_DIR" => make_compatible_path(clang_artifact_dir; windows),
+        "LLVM_GENERATED_INCLUDE_DIR" => make_compatible_path(llvm_generated_include_dir; windows),
+        "LLVM_COMPAT_INCLUDE_DIR" => make_compatible_path(compat_include_dir; windows),
+    )
 end
 
 function stage_legacy_source_layout!(prefix::AbstractString,
