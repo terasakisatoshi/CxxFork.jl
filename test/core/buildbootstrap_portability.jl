@@ -9,5 +9,7 @@ makefile = read(joinpath(@__DIR__, "..", "..", "deps", "BuildBootstrap.Makefile"
     @test occursin(raw"ifeq ($(OS), WINNT)", makefile)
     @test occursin("CPPFLAGS += -D_FILE_OFFSET_BITS=64", makefile)
     @test occursin("CXX := clang++.exe", makefile)
+    @test occursin("COMMON_CXXFLAGS += -pthread", makefile)
+    @test occursin("LDFLAGS += -fuse-ld=lld -pthread", makefile)
     @test occursin(raw"LLVM_LINK_NAME := LLVM-$(firstword $(subst ., ,$(LLVM_VER)))jl", makefile)
 end
