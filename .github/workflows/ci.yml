@@ -37,3 +37,19 @@ jobs:
         run: julia --project=. -e 'using Pkg; Pkg.build()'
       - name: Smoke
         run: julia --project=. --compiled-modules=no -e 'using Cxx'
+
+  windows-smoke:
+    name: Windows smoke
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+      - uses: julia-actions/cache@v2
+      - name: Build
+        shell: bash
+        run: julia --project=. -e 'using Pkg; Pkg.build()'
+      - name: Smoke
+        shell: bash
+        run: julia --project=. --compiled-modules=no -e 'using Cxx'

@@ -106,7 +106,7 @@
 #undef private
 #include "CodeGen/CGCXXABI.h"
 
-#ifdef _OS_WINDOWS_
+#ifdef _WIN32
 #define STDCALL __stdcall
 # ifdef LIBRARY_EXPORTS
 #  define JL_DLLEXPORT __declspec(dllexport)
@@ -126,7 +126,7 @@
 #  define _P64
 #elif defined(_CPU_X86_)
 #  define _P32
-#elif defined(_OS_WINDOWS_)
+#elif defined(_WIN32)
 /* Not sure how to determine pointer size on Windows running ARM. */
 #  if _WIN64
 #    define _P64
@@ -194,7 +194,7 @@ extern "C" {
   TYPE_ACCESS(cT_uint16,UnsignedShortTy)
   TYPE_ACCESS(cT_int32,IntTy)
   TYPE_ACCESS(cT_uint32,UnsignedIntTy)
-#ifdef _OS_WINDOWS_
+#ifdef _WIN32
   TYPE_ACCESS(cT_int64,LongLongTy)
   TYPE_ACCESS(cT_uint64,UnsignedLongLongTy)
 #else
@@ -1546,7 +1546,7 @@ static void set_default_clang_options(CxxInstance *Cxx, bool CCompiler, const ch
         Cxx->CI->getLangOpts().Exceptions = 1;          // exception handling
         Cxx->CI->getLangOpts().ObjCExceptions = 1;  //  Objective-C exceptions
         Cxx->CI->getLangOpts().CXXExceptions = 1;   // C++ exceptions
-#ifdef _OS_WINDOWS_
+#ifdef _WIN32
 	Cxx->CI->getLangOpts().SEHExceptions = 1; // Julia uses SEH exception handling on Windows
 #endif
         Cxx->CI->getLangOpts().CXXOperatorNames = 1;
@@ -3261,7 +3261,7 @@ JL_DLLEXPORT bool isDCComplete(clang::DeclContext *DC) {
 
 } // extern "C"
 
-#ifndef _OS_WINDOWS_
+#ifndef _WIN32
 #include <signal.h>
 static void jl_unblock_signal(int sig)
 {
@@ -3295,4 +3295,4 @@ JL_DLLEXPORT void InstallSIGABRTHandler(void *exception)
   }
 }
 } // extern "C"
-#endif // _OS_WINDOWS_
+#endif // _WIN32
