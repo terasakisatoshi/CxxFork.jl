@@ -22,7 +22,24 @@ end
 function extract_tar_archive!(archive::AbstractString, dest::AbstractString)
     archive_path = tar_compatible_path(archive)
     dest_path = tar_compatible_path(dest)
-    run(`tar -xf $archive_path -C $dest_path`)
+    run(`tar -xf $archive_path -C $dest_path $(llvm_source_archive_members(version_from_archive_name(archive))...)`)
+end
+
+function llvm_source_archive_members(llvm_ver::VersionNumber)
+    root = "llvm-project-$(llvm_ver).src"
+    return [
+        root,
+        "$root/llvm/include",
+        "$root/clang/include",
+        "$root/clang/lib",
+    ]
+end
+
+function version_from_archive_name(path::AbstractString)
+    basename_path = basename(path)
+    matchobj = match(r"llvm-project-(.+)\.src\.tar\.xz$", basename_path)
+    matchobj === nothing && error("Could not determine LLVM version from archive name: $basename_path")
+    return VersionNumber(matchobj.captures[1])
 end
 
 function ensure_llvm_sources!(llvm_ver::VersionNumber)
