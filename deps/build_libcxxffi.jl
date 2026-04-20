@@ -78,6 +78,18 @@ select_clang_artifact_dir(; clang_artifact_dir::AbstractString,
                             windows::Bool = Sys.iswindows()) =
     windows ? llvm_artifact_dir : clang_artifact_dir
 
+function windows_path_entries(; clang_artifact_dir::AbstractString,
+                              llvm_artifact_dir::AbstractString)
+    entries = String[
+        make_compatible_path(joinpath(clang_artifact_dir, "tools"); windows = true),
+        make_compatible_path(joinpath(clang_artifact_dir, "bin"); windows = true),
+        make_compatible_path(joinpath(llvm_artifact_dir, "tools"); windows = true),
+        make_compatible_path(joinpath(llvm_artifact_dir, "bin"); windows = true),
+    ]
+    unique!(entries)
+    return entries
+end
+
 function build_env_vars(; prefix::AbstractString,
                         base_julia_bin::AbstractString,
                         julia_prefix::AbstractString,
@@ -87,8 +99,9 @@ function build_env_vars(; prefix::AbstractString,
                         llvm_artifact_dir::AbstractString,
                         llvm_generated_include_dir::AbstractString,
                         compat_include_dir::AbstractString,
+                        existing_path::AbstractString = get(ENV, "PATH", ""),
                         windows::Bool = Sys.iswindows())
-    return Dict(
+    env = Dict(
         "PREFIX" => make_compatible_path(prefix; windows),
         "BASE_JULIA_BIN" => make_compatible_path(base_julia_bin; windows),
         "JULIA_PREFIX" => make_compatible_path(julia_prefix; windows),
@@ -99,6 +112,15 @@ function build_env_vars(; prefix::AbstractString,
         "LLVM_GENERATED_INCLUDE_DIR" => make_compatible_path(llvm_generated_include_dir; windows),
         "LLVM_COMPAT_INCLUDE_DIR" => make_compatible_path(compat_include_dir; windows),
     )
+    if windows
+        path_entries = windows_path_entries(
+            clang_artifact_dir = clang_artifact_dir,
+            llvm_artifact_dir = llvm_artifact_dir,
+        )
+        !isempty(existing_path) && push!(path_entries, existing_path)
+        env["PATH"] = join(path_entries, ';')
+    end
+    return env
 end
 
 function stage_legacy_source_layout!(prefix::AbstractString,

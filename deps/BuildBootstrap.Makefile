@@ -39,7 +39,7 @@ CLANG_SOURCE_INCLUDE_DIR := $(LLVM_SOURCE_ROOT)/clang/include
 CLANG_PRIVATE_INCLUDE_DIR := $(LLVM_SOURCE_ROOT)/clang/lib
 
 ifeq ($(OS), WINNT)
-CXX := $(CLANG_ARTIFACT_DIR)/tools/clang++.exe
+CXX := clang++.exe
 CPPFLAGS += -D_FILE_OFFSET_BITS=64
 endif
 
