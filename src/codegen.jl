@@ -418,9 +418,9 @@ function irbuilder(C)
 end
 
 function _julia_to_llvm(@nospecialize x)
-    isboxed = Ref{UInt8}()
-    ty = pcpp"llvm::Type"(ccall(:julia_type_to_llvm,Ptr{Cvoid},(Any,Ref{UInt8}),x,isboxed))
-    (isboxed[] != 0, ty)
+    isboxed = Ref{Bool}(false)
+    ty = pcpp"llvm::Type"(ccall(:jl_type_to_llvm, Ptr{Cvoid}, (Any, Ptr{Cvoid}, Ref{Bool}), x, jl_get_llvmc(), isboxed))
+    (isboxed[], ty)
 end
 function julia_to_llvm(@nospecialize x)
     isboxed, ty = _julia_to_llvm(x)
@@ -442,7 +442,7 @@ end
 # error.
 function check_args(argt,f)
     for (i,t) in enumerate(argt)
-        if isa(t,Union) || (isa(t,DataType) && t.abstract) || (!isCxxEquivalentType(t) &&
+        if isa(t,Union) || (isa(t,DataType) && isabstracttype(t)) || (!isCxxEquivalentType(t) &&
             !(t <: CxxBuiltinTs))
             error("Got bad type information while compiling $f (got $t for argument $i)")
         end
@@ -753,9 +753,10 @@ function createReturn(C,builder,f,argt,llvmargt,llvmrt,rett,rt,ret,state; argidx
     if (rett != Union{}) && rett <: CppValue
         arguments = vcat([:r], args2)
         size = cxxsizeof(C,rt)
+        ir = llvmcall_ir(f)
         B = Expr(:block,
             :( r = ($(rett){$(Int(size))})() ),
-                Expr(:call,Core.Intrinsics.llvmcall,convert(Ptr{Cvoid},f),Cvoid,Tuple{llvmargt...},arguments...))
+                Expr(:call,Core.Intrinsics.llvmcall,ir,Cvoid,Tuple{llvmargt...},arguments...))
         T = cpptype(C, rett)
         D = getAsCXXRecordDecl(T)
         if D != C_NULL && !hasTrivialDestructor(C,D)
@@ -765,7 +766,8 @@ function createReturn(C,builder,f,argt,llvmargt,llvmrt,rett,rt,ret,state; argidx
         push!(B.args,:r)
         return B
     else
-        return Expr(:call,Core.Intrinsics.llvmcall,convert(Ptr{Cvoid},f),rett,Tuple{argt...},args2...)
+        ir = llvmcall_ir(f)
+        return Expr(:call,Core.Intrinsics.llvmcall,ir,rett,Tuple{argt...},args2...)
     end
 end
 
@@ -863,5 +865,6 @@ end
     emitDestroyCXXObject(C, args[1], T)
     CreateRetVoid(builder)
     cleanup_cpp_env(C, state)
-    return Expr(:call,Core.Intrinsics.llvmcall,convert(Ptr{Cvoid},f),Cvoid,Tuple{x},:x)
+    ir = llvmcall_ir(f)
+    return Expr(:call,Core.Intrinsics.llvmcall,ir,Cvoid,Tuple{x},:x)
 end

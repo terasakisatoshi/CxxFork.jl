@@ -138,6 +138,8 @@ function CreateFunction(C,rt,argt)
         (Ref{ClangCompiler},Ptr{Cvoid},Ptr{Ptr{Cvoid}},Csize_t),C,rt,cptrarr(argt),length(argt)))
 end
 
+jl_get_llvmc() = ccall((:jl_get_llvmc, libcxxffi), Ptr{Cvoid}, ())
+
 function ExtractValue(C,v::pcpp"llvm::Value",idx)
     pcpp"llvm::Value"(ccall((:create_extract_value,libcxxffi),Ptr{Cvoid},
         (Ref{ClangCompiler},Ptr{Cvoid},Csize_t),C,v,idx))
@@ -394,6 +396,8 @@ end
 isDeclInvalid(D::pcpp"clang::Decl") = Bool(ccall((:isDeclInvalid,libcxxffi),Cint,(Ptr{Cvoid},),D))
 
 builtinKind(t::pcpp"clang::Type") = ccall((:builtinKind,libcxxffi),Cint,(Ptr{Cvoid},),t)
+isSignedBuiltinType(t::pcpp"clang::Type") = ccall((:isSignedBuiltinType,libcxxffi),Cint,(Ptr{Cvoid},),t) != 0
+isUnsignedBuiltinType(t::pcpp"clang::Type") = ccall((:isUnsignedBuiltinType,libcxxffi),Cint,(Ptr{Cvoid},),t) != 0
 
 const CK_Dependent      = 0
 const CK_BitCast        = 1
@@ -632,6 +636,10 @@ getFunction(C, name) =
     pcpp"llvm::Function"(ccall((:getFunction, libcxxffi), Ptr{Cvoid}, (Ref{ClangCompiler}, Ptr{UInt8}, Csize_t), C, name, endof(name)))
 
 getTypeName(C, T) = ccall((:getTypeName, libcxxffi), Any, (Ref{ClangCompiler}, Ptr{Cvoid}), C, T)
+getLLVMFunctionName(F::pcpp"llvm::Function") = ccall((:GetLLVMFunctionName, libcxxffi), Any, (Ptr{Cvoid},), F)
+getLLVMModuleIR(F::pcpp"llvm::Function") = ccall((:GetLLVMModuleIR, libcxxffi), Any, (Ptr{Cvoid},), F)
+
+llvmcall_ir(F::pcpp"llvm::Function") = (getLLVMModuleIR(F), getLLVMFunctionName(F))
 
 GetAddrOfFunction(C, FD) = pcpp"llvm::Constant"(ccall((:GetAddrOfFunction,libcxxffi),Ptr{Cvoid},(Ref{ClangCompiler},Ptr{Cvoid}),C,FD))
 

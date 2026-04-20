@@ -258,4 +258,13 @@ module CxxREPL
         main_mode.keymap_dict = LineEdit.keymap_merge(main_mode.keymap_dict, cxx_keymap);
         nothing
     end
+
+    function __init__()
+        if !Cxx.ENABLE_CXX_REPL
+            return
+        end
+        if isdefined(Base, :active_repl)
+            RunCxxREPL(CxxCore.__current_compiler__)
+        end
+    end
 end

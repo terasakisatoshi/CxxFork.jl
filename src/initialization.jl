@@ -69,7 +69,9 @@ function RunGlobalConstructors(C)
     p = convert(Ptr{Cvoid}, CollectGlobalConstructors(C))
     # If p is NULL it means we have no constructors to run
     if p != C_NULL
-        eval(:(let f()=llvmcall($p,Cvoid,Tuple{}); f(); end))
+        f = pcpp"llvm::Function"(p)
+        ir = llvmcall_ir(f)
+        eval(:(let run_ctor() = llvmcall($ir, Cvoid, Tuple{}); run_ctor(); end))
     end
 end
 
@@ -400,6 +402,9 @@ end
 
 function initialize_instance!(C; register_boot = true, headers = collectAllHeaders(nostdcxx))
     addHeaders(C, headers)
+    @static if isapple()
+        defineMacro(C, "_VA_LIST_T")
+    end
     register_boot && register_booth(C)
 end
 

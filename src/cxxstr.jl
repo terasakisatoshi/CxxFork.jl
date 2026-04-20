@@ -156,7 +156,7 @@ function InstantiateSpecializationsForType(C, DC, LambdaT)
         if T === Union{}
           T = Cvoid
         end
-        if isa(T,Union) || T.abstract
+        if isa(T,Union) || isabstracttype(T)
           error("Inferred Union or abstract type $T for expression $F")
         end
         f = get_llvmf_decl(tt)
