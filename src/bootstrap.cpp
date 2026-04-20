@@ -705,7 +705,7 @@ JL_DLLEXPORT void *GetLLVMModuleIR(llvm::Function *F)
   return jl_pchar_to_string(IR.data(), IR.size());
 }
 
-size_t cxxsizeofType(CxxInstance *Cxx, void *t);
+JL_DLLEXPORT size_t cxxsizeofType(CxxInstance *Cxx, void *t);
 typedef struct cppcall_state {
     // Save previous globals
     llvm::Module *module;
@@ -718,8 +718,8 @@ typedef struct cppcall_state {
     llvm::Instruction *alloca_bb_ptr;
 } cppcall_state_t;
 
-void *setup_cpp_env(CxxInstance *Cxx, void *jlfunc);
-void cleanup_cpp_env(CxxInstance *Cxx, cppcall_state_t *);
+JL_DLLEXPORT void *setup_cpp_env(CxxInstance *Cxx, void *jlfunc);
+JL_DLLEXPORT void cleanup_cpp_env(CxxInstance *Cxx, cppcall_state_t *);
 extern void jl_(void*);
 static Function *CloneFunctionAndAdjust(CxxInstance *Cxx, Function *F, FunctionType *FTy,
                               bool ModuleLevelChanges,

@@ -11,4 +11,7 @@ bootstrap = read(joinpath(@__DIR__, "..", "..", "src", "bootstrap.cpp"), String)
     @test occursin("setExceptionHandling(clang::LangOptions::ExceptionHandlingKind::WinEH);", bootstrap)
     @test occursin("#ifndef _WIN32\n#include <signal.h>", bootstrap)
     @test occursin("#endif // _WIN32", bootstrap)
+    @test occursin("JL_DLLEXPORT size_t cxxsizeofType(CxxInstance *Cxx, void *t);", bootstrap)
+    @test occursin("JL_DLLEXPORT void *setup_cpp_env(CxxInstance *Cxx, void *jlfunc);", bootstrap)
+    @test occursin("JL_DLLEXPORT void cleanup_cpp_env(CxxInstance *Cxx, cppcall_state_t *);", bootstrap)
 end
