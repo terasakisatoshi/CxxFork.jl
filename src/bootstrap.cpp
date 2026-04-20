@@ -1547,7 +1547,7 @@ static void set_default_clang_options(CxxInstance *Cxx, bool CCompiler, const ch
         Cxx->CI->getLangOpts().ObjCExceptions = 1;  //  Objective-C exceptions
         Cxx->CI->getLangOpts().CXXExceptions = 1;   // C++ exceptions
 #ifdef _WIN32
-	Cxx->CI->getLangOpts().SEHExceptions = 1; // Julia uses SEH exception handling on Windows
+	Cxx->CI->getLangOpts().setExceptionHandling(clang::LangOptions::ExceptionHandlingKind::WinEH);
 #endif
         Cxx->CI->getLangOpts().CXXOperatorNames = 1;
         Cxx->CI->getLangOpts().DoubleSquareBracketAttributes = 1;
