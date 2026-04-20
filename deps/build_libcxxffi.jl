@@ -73,6 +73,11 @@ function make_compatible_path(path::AbstractString; windows::Bool = Sys.iswindow
     return replace(normalized, '\\' => '/')
 end
 
+select_clang_artifact_dir(; clang_artifact_dir::AbstractString,
+                            llvm_artifact_dir::AbstractString,
+                            windows::Bool = Sys.iswindows()) =
+    windows ? llvm_artifact_dir : clang_artifact_dir
+
 function build_env_vars(; prefix::AbstractString,
                         base_julia_bin::AbstractString,
                         julia_prefix::AbstractString,
@@ -129,10 +134,15 @@ function ensure_build_artifacts!(llvm_ver::VersionNumber)
     Base.invokelatest(() -> Base.eval(Main, :(using LLVM_full_jll)))
     clang_jll = Base.invokelatest(() -> getfield(Main, :Clang_jll))
     llvm_full_jll = Base.invokelatest(() -> getfield(Main, :LLVM_full_jll))
+    raw_clang_artifact_dir = normpath(Base.invokelatest(() -> getproperty(clang_jll, :artifact_dir)))
+    llvm_artifact_dir = normpath(Base.invokelatest(() -> getproperty(llvm_full_jll, :artifact_dir)))
     return (
-        clang_artifact_dir = normpath(Base.invokelatest(() -> getproperty(clang_jll, :artifact_dir))),
-        llvm_artifact_dir = normpath(Base.invokelatest(() -> getproperty(llvm_full_jll, :artifact_dir))),
-        llvm_generated_include_dir = normpath(joinpath(Base.invokelatest(() -> getproperty(llvm_full_jll, :artifact_dir)), "include")),
+        clang_artifact_dir = select_clang_artifact_dir(
+            clang_artifact_dir = raw_clang_artifact_dir,
+            llvm_artifact_dir = llvm_artifact_dir,
+        ),
+        llvm_artifact_dir = llvm_artifact_dir,
+        llvm_generated_include_dir = normpath(joinpath(llvm_artifact_dir, "include")),
     )
 end
 

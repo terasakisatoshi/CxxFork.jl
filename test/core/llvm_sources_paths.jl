@@ -70,3 +70,17 @@ end
     @test env["LLVM_GENERATED_INCLUDE_DIR"] == "C:/Users/runneradmin/.julia/artifacts/a31fde35ae61c78ae4cd2f5ff2fed153f7297407/include"
     @test env["LLVM_COMPAT_INCLUDE_DIR"] == "D:/a/CxxFork.jl/CxxFork.jl/deps/usr/include"
 end
+
+@testset "select_clang_artifact_dir" begin
+    @test select_clang_artifact_dir(
+        clang_artifact_dir = raw"C:\Users\runneradmin\.julia\artifacts\037bb3cc76618b33c395c8bea304d652d5590d1d",
+        llvm_artifact_dir = raw"C:\Users\runneradmin\.julia\artifacts\a31fde35ae61c78ae4cd2f5ff2fed153f7297407",
+        windows = true,
+    ) == raw"C:\Users\runneradmin\.julia\artifacts\a31fde35ae61c78ae4cd2f5ff2fed153f7297407"
+
+    @test select_clang_artifact_dir(
+        clang_artifact_dir = "/tmp/clang-artifact",
+        llvm_artifact_dir = "/tmp/llvm-artifact",
+        windows = false,
+    ) == "/tmp/clang-artifact"
+end
