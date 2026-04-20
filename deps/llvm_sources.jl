@@ -22,7 +22,6 @@ end
 function llvm_source_archive_members(llvm_ver::VersionNumber)
     root = "llvm-project-$(llvm_ver).src"
     return [
-        root,
         "$root/llvm/include",
         "$root/clang/include",
         "$root/clang/lib",

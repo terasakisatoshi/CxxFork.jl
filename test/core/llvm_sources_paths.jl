@@ -12,7 +12,6 @@ include(joinpath(@__DIR__, "..", "..", "deps", "llvm_sources.jl"))
 
     members = llvm_source_archive_members(v"18.1.7")
     @test members == [
-        "llvm-project-18.1.7.src",
         "llvm-project-18.1.7.src/llvm/include",
         "llvm-project-18.1.7.src/clang/include",
         "llvm-project-18.1.7.src/clang/lib",
@@ -25,7 +24,6 @@ include(joinpath(@__DIR__, "..", "..", "deps", "llvm_sources.jl"))
         "/tmp/llvm-project-18.1.7.src.tar.xz",
         "-C",
         "/tmp",
-        "llvm-project-18.1.7.src",
         "llvm-project-18.1.7.src/llvm/include",
         "llvm-project-18.1.7.src/clang/include",
         "llvm-project-18.1.7.src/clang/lib",
@@ -42,7 +40,6 @@ include(joinpath(@__DIR__, "..", "..", "deps", "llvm_sources.jl"))
         "/d/a/CxxFork.jl/CxxFork.jl/deps/usr/src/llvm-project-18.1.7.src.tar.xz",
         "-C",
         "/d/a/CxxFork.jl/CxxFork.jl/deps/usr/src",
-        "llvm-project-18.1.7.src",
         "llvm-project-18.1.7.src/llvm/include",
         "llvm-project-18.1.7.src/clang/include",
         "llvm-project-18.1.7.src/clang/lib",
