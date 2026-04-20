@@ -64,6 +64,7 @@ LIB_DIRS := $(CLANG_LIBDIR) $(LLVM_LIBDIR) $(JULIA_LIB_SEARCH_DIRS)
 ifeq ($(OS), WINNT)
 LLVM_LINK_NAME := LLVM-$(firstword $(subst ., ,$(LLVM_VER)))jl
 LDFLAGS += -fuse-ld=lld -pthread
+LDLIBS += -lmsvcrt
 RPATH_FLAGS :=
 else
 LLVM_LINK_NAME := LLVM
