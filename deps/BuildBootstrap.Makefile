@@ -53,7 +53,7 @@ endif
 
 JULIA_LIB_SEARCH_DIRS := $(JULIA_LIBDIR) $(JULIA_LLVM_LIBDIR)
 LIB_DIRS := $(CLANG_LIBDIR) $(LLVM_LIBDIR) $(JULIA_LIB_SEARCH_DIRS)
-ifeq ($(OS), Windows_NT)
+ifeq ($(OS), WINNT)
 LLVM_LINK_NAME := LLVM-$(firstword $(subst ., ,$(LLVM_VER)))jl
 RPATH_FLAGS :=
 else
