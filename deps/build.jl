@@ -1,46 +1,51 @@
-using Libdl
-
-# in case we have specified the path to the julia installation
-# that contains the headers etc, use that
-BASE_JULIA_BIN = get(ENV, "BASE_JULIA_BIN", Sys.BINDIR) |> normpath
-BASE_JULIA_SRC = get(ENV, "BASE_JULIA_SRC", joinpath(BASE_JULIA_BIN, "..", "..")) |> normpath
-
-# write a simple include file with that path
-println("writing path.jl file")
-s = """
-const BASE_JULIA_BIN=$(sprint(show, BASE_JULIA_BIN))
-export BASE_JULIA_BIN
-
-const BASE_JULIA_SRC=$(sprint(show, BASE_JULIA_SRC))
-export BASE_JULIA_SRC
-"""
-
-println("Tuning for julia installation at $BASE_JULIA_BIN with sources possibly at $BASE_JULIA_SRC")
-
-# try to autodetect C++ ABI in use
-llvm_path = Sys.iswindows() ? "LLVM" :
-            Sys.isapple() ? "libLLVM" : "libLLVM-$(Base.libllvm_version)"
-llvm_lib_path = Libdl.dlpath(llvm_path)
-old_cxx_abi = findfirst("_ZN4llvm3sys16getProcessTripleEv", String(open(read, llvm_lib_path))) !== nothing
-old_cxx_abi && (ENV["OLD_CXX_ABI"] = "1")
-
-llvm_config_path = joinpath(BASE_JULIA_BIN, "..", "tools", "llvm-config")
-if isfile(llvm_config_path)
-    @info "Building julia source build"
-    ENV["LLVM_CONFIG"] = llvm_config_path
-    delete!(ENV,"LLVM_VER")
-    make = Sys.isbsd() && !Sys.isapple() ? `gmake` : `make`
-    run(`$make all -j$(Sys.CPU_THREADS) -f BuildBootstrap.Makefile BASE_JULIA_BIN=$BASE_JULIA_BIN BASE_JULIA_SRC=$BASE_JULIA_SRC`)
-    s = s * "\n const IS_BINARYBUILD = false"
-else
-    @info "Building julia binary build"
-    Sys.iswindows() && @warn "Windows support is still experimental!"
-    ENV["LLVM_VER"] = Base.libllvm_version
-    ENV["PATH"] = string(BASE_JULIA_BIN,":",ENV["PATH"])
-    include("build_libcxxffi.jl")
-    s = s * "\n const IS_BINARYBUILD = true"
+if "@stdlib" ∉ LOAD_PATH
+    push!(LOAD_PATH, "@stdlib")
 end
 
-f = open(joinpath(dirname(@__FILE__),"path.jl"), "w")
-write(f, s)
-close(f)
+include("build_libcxxffi.jl")
+
+const DEPS_DIR = @__DIR__
+
+function main()
+    base_julia_bin = normpath(get(ENV, "BASE_JULIA_BIN", Sys.BINDIR))
+    julia_prefix = normpath(get(ENV, "JULIA_PREFIX", joinpath(base_julia_bin, "..")))
+    prefix = joinpath(DEPS_DIR, "usr")
+
+    build_info = build_libcxxffi(;
+        prefix,
+        base_julia_bin,
+        julia_prefix,
+        llvm_ver = Base.libllvm_version,
+    )
+
+    write_path_file(;
+        base_julia_bin,
+        julia_prefix,
+        llvm_source_root = build_info.llvm_source_root,
+        clang_artifact_dir = build_info.clang_artifact_dir,
+    )
+end
+
+function write_path_file(; base_julia_bin, julia_prefix, llvm_source_root, clang_artifact_dir)
+    contents = """
+const BASE_JULIA_BIN = $(sprint(show, base_julia_bin))
+export BASE_JULIA_BIN
+
+const JULIA_PREFIX = $(sprint(show, julia_prefix))
+export JULIA_PREFIX
+
+const LLVM_SOURCE_ROOT = $(sprint(show, llvm_source_root))
+export LLVM_SOURCE_ROOT
+
+const CLANG_ARTIFACT_DIR = $(sprint(show, clang_artifact_dir))
+export CLANG_ARTIFACT_DIR
+
+const IS_BINARYBUILD = true
+export IS_BINARYBUILD
+"""
+    open(joinpath(DEPS_DIR, "path.jl"), "w") do io
+        write(io, contents)
+    end
+end
+
+main()
