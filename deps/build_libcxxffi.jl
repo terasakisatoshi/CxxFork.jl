@@ -19,6 +19,8 @@ function build_libcxxffi(; prefix::AbstractString,
     llvm_source_root = ensure_llvm_sources!(llvm_ver)
     artifacts = ensure_build_artifacts!(llvm_ver)
     compat_include_dir = stage_compat_headers!(prefix)
+    stage_clang_builtin_headers!(prefix, artifacts.clang_artifact_dir, llvm_ver)
+    stage_legacy_source_layout!(prefix, llvm_source_root, artifacts, llvm_ver)
 
     mkpath(prefix)
 
@@ -40,6 +42,49 @@ function build_libcxxffi(; prefix::AbstractString,
         llvm_source_root = llvm_source_root,
         clang_artifact_dir = artifacts.clang_artifact_dir,
     )
+end
+
+function stage_clang_builtin_headers!(prefix::AbstractString,
+                                      clang_artifact_dir::AbstractString,
+                                      llvm_ver::VersionNumber)
+    clang_root = joinpath(clang_artifact_dir, "lib", "clang")
+    isdir(clang_root) || return nothing
+
+    versions = sort(filter(entry -> isdir(joinpath(clang_root, entry, "include")), readdir(clang_root)))
+    isempty(versions) && return nothing
+
+    source_dir = joinpath(clang_root, last(versions), "include")
+    dest_dir = joinpath(prefix, "build", "clang-$(llvm_ver)", "lib", "clang", string(llvm_ver), "include")
+    mkpath(dirname(dest_dir))
+
+    if ispath(dest_dir)
+        rm(dest_dir; force = true, recursive = true)
+    end
+    symlink(source_dir, dest_dir)
+    return dest_dir
+end
+
+function stage_legacy_source_layout!(prefix::AbstractString,
+                                     llvm_source_root::AbstractString,
+                                     artifacts,
+                                     llvm_ver::VersionNumber)
+    src_root = dirname(llvm_source_root)
+    link_if_missing(joinpath(src_root, "clang-$(llvm_ver)"), joinpath(llvm_source_root, "clang"))
+    link_if_missing(joinpath(src_root, "llvm-$(llvm_ver)"), joinpath(llvm_source_root, "llvm"))
+
+    build_root = joinpath(prefix, "build")
+    link_if_missing(joinpath(build_root, "clang-$(llvm_ver)", "include"), joinpath(artifacts.clang_artifact_dir, "include"))
+    link_if_missing(joinpath(build_root, "llvm-$(llvm_ver)", "include"), artifacts.llvm_generated_include_dir)
+    return nothing
+end
+
+function link_if_missing(dest::AbstractString, src::AbstractString)
+    mkpath(dirname(dest))
+    if ispath(dest)
+        rm(dest; force = true, recursive = true)
+    end
+    symlink(src, dest)
+    return dest
 end
 
 function ensure_build_artifacts!(llvm_ver::VersionNumber)
