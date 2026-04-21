@@ -11,13 +11,16 @@ on:
 
 jobs:
   macos-arm64:
-    name: macOS arm64 full
+    name: macOS arm64 full (Julia ${{ matrix.julia-version }})
     runs-on: macos-14
+    strategy:
+      matrix:
+        julia-version: ["lts", "1"]
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: "1.12"
+          version: ${{ matrix.julia-version }}
       - uses: julia-actions/cache@v2
       - name: Build
         run: julia --project=. -e 'using Pkg; Pkg.build()'
@@ -25,13 +28,16 @@ jobs:
         run: julia --project=. -e 'using Pkg; Pkg.test()'
 
   linux-smoke:
-    name: Linux smoke
+    name: Linux smoke (Julia ${{ matrix.julia-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        julia-version: ["lts", "1"]
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: "1.12"
+          version: ${{ matrix.julia-version }}
       - uses: julia-actions/cache@v2
       - name: Build
         run: julia --project=. -e 'using Pkg; Pkg.build()'
