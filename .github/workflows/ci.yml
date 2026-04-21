@@ -11,7 +11,7 @@ on:
 
 jobs:
   macos-arm64:
-    name: macOS arm64 full
+    name: macOS arm64 baseline
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -21,8 +21,22 @@ jobs:
       - uses: julia-actions/cache@v2
       - name: Build
         run: julia --project=. -e 'using Pkg; Pkg.build()'
-      - name: Test
+      - name: Baseline Test
         run: julia --project=. -e 'using Pkg; Pkg.test()'
+
+  macos-arm64-extended:
+    name: macOS arm64 extended
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+      - uses: julia-actions/cache@v2
+      - name: Build
+        run: julia --project=. -e 'using Pkg; Pkg.build()'
+      - name: Extended Test
+        run: julia --project=. -e 'using Pkg; Pkg.test(test_args=["extended","--jobs=1"])'
 
   linux-smoke:
     name: Linux smoke
