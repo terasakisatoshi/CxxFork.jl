@@ -14,7 +14,10 @@ const StdStringR = cxxt"std::string&"
 const StdVector{T} = Union{cxxt"std::vector<$T>",cxxt"std::vector<$T>&"}
 const StdMap{K,V} = cxxt"std::map<$K,$V>"
 const StdStringMap =
-  cxxt"std::map<std::string,std::string,std::less<std::string>,std::allocator<std::pair<const std::string,std::string>>>"
+  Union{
+    cxxt"std::map<std::string,std::string,std::less<std::string>,std::allocator<std::pair<const std::string,std::string>>>",
+    cxxt"std::map<std::string,std::string,std::less<std::string>,std::allocator<std::pair<const std::string,std::string>>>&",
+  }
 const GenericStdMap =
   CppValue{CxxQualType{CppTemplate{
     CppBaseType{Symbol("std::map")},Stuff},
@@ -107,6 +110,8 @@ function Base.iterate(map::StdStringMap, i = icxx"$map.begin();")
     icxx"++$i;"
     return (key => val, i)
 end
+Base.length(map::StdStringMap) = Int(icxx"return $map.size();")
+Base.eltype(::Type{T}) where {T<:StdStringMap} = Pair{String,String}
 
 function Base.iterate(map::GenericStdMap, i = icxx"$map.begin();")
     icxx"return $i == $map.end();" && return nothing
