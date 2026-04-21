@@ -83,6 +83,7 @@ julia --project=. -e 'using Pkg; Pkg.test(test_args=["extended","--jobs=1"])'
 Today the extended lane adds:
 
 - `extended/ctest` for the C compiler mode path
+- `extended/std_string` for verified `std::string` <-> Julia `String` conversions
 
 Additional non-core suites should land here only after they are stable enough to validate continuously on `macOS arm64`.
 

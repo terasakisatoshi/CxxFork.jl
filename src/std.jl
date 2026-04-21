@@ -18,10 +18,31 @@ const GenericStdMap =
     CppBaseType{Symbol("std::map")},Stuff},
     (false, false, false)},N} where N where Stuff
 
-unsafe_string(str::Union{StdString,StdStringR}) = unsafe_string((@cxx str->data()),@cxx str->size())
+const std_string_header_instances = CxxCore.ClangCompiler[]
+
+function __init__()
+    empty!(std_string_header_instances)
+    ensure_std_string_header!()
+end
+
+function ensure_std_string_header!()
+    C = CxxCore.instance(__current_compiler__)
+    any(==(C), std_string_header_instances) && return C
+    cxxinclude(C, "string"; isAngled = true)
+    push!(std_string_header_instances, C)
+    C
+end
+
+function unsafe_string(str::Union{StdString,StdStringR})
+    ensure_std_string_header!()
+    Base.unsafe_string(icxx"$str.data();", Int(icxx"$str.size();"))
+end
 String(str::Union{StdString,StdStringR}) = unsafe_string(str)
 Base.convert(::Type{String}, x::Union{StdString,StdStringR}) = String(x)
-Base.convert(::Type{StdString}, x::AbstractString) = icxx"std::string s($(pointer(x)), $(sizeof(x))); s;"
+function Base.convert(::Type{StdString}, x::AbstractString)
+    ensure_std_string_header!()
+    icxx"std::string s($(pointer(x)), $(sizeof(x))); s;"
+end
 
 import Base: showerror
 
