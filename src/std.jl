@@ -13,6 +13,8 @@ const StdString = cxxt"std::string"
 const StdStringR = cxxt"std::string&"
 const StdVector{T} = Union{cxxt"std::vector<$T>",cxxt"std::vector<$T>&"}
 const StdMap{K,V} = cxxt"std::map<$K,$V>"
+const StdStringMap =
+  cxxt"std::map<std::string,std::string,std::less<std::string>,std::allocator<std::pair<const std::string,std::string>>>"
 const GenericStdMap =
   CppValue{CxxQualType{CppTemplate{
     CppBaseType{Symbol("std::map")},Stuff},
@@ -98,13 +100,19 @@ Base.deleteat!(v::StdVector,idxs::UnitRange) =
 Base.push!(v::StdVector,i) = icxx"$v.push_back($i);"
 Base.resize!(v::StdVector, n) = icxx"$v.resize($n);"
 
-function Base.iterate(map::GenericStdMap, i = icxx"$map.begin();")
-    if icxx"return $i == $map.end();"
-        return nothing
-    end
-    v = icxx"return $i->first;" => icxx"return $i->second;"
+function Base.iterate(map::StdStringMap, i = icxx"$map.begin();")
+    icxx"return $i == $map.end();" && return nothing
+    key = unsafe_string(icxx"return $i->first.data();", Int(icxx"return $i->first.size();"))
+    val = unsafe_string(icxx"return $i->second.data();", Int(icxx"return $i->second.size();"))
     icxx"++$i;"
-    (v,i)
+    return (key => val, i)
+end
+
+function Base.iterate(map::GenericStdMap, i = icxx"$map.begin();")
+    icxx"return $i == $map.end();" && return nothing
+    pair = icxx"return $i->first;" => icxx"return $i->second;"
+    icxx"++$i;"
+    return (pair, i)
 end
 Base.length(map::GenericStdMap) = Int(icxx"return $map.size();")
 Base.eltype(::Type{StdMap{K,V}}) where {K,V} = Pair{K,V}
