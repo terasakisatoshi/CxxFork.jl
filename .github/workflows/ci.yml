@@ -55,6 +55,16 @@ jobs:
           clang++.exe -print-search-dirs
           command -v gcc.exe || true
           command -v ld.lld.exe || true
+          command -v llvm-nm.exe || true
+          for d in \
+            /c/hostedtoolcache/windows/julia/1.12.6/x64/lib \
+            /c/hostedtoolcache/windows/julia/1.12.6/x64/lib/julia \
+            /c/mingw64/x86_64-w64-mingw32/lib \
+            /c/mingw64/lib/gcc/x86_64-w64-mingw32/*; do
+            ls "$d"/libmsvcrt.a 2>/dev/null && echo "libmsvcrt.a in $d"
+          done
+          llvm-nm.exe /c/mingw64/x86_64-w64-mingw32/lib/libmsvcrt.a 2>/dev/null | rg '_initterm_e' || true
+          llvm-nm.exe /c/mingw64/x86_64-w64-mingw32/lib/libucrt.a 2>/dev/null | rg '_initterm_e' || true
       - name: Build
         shell: bash
         env:
