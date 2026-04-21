@@ -15,6 +15,7 @@ end
     core_suite = TestsuiteConfig.build_testsuite()
     extended_suite = TestsuiteConfig.build_testsuite(include_extended = true)
     exceptions_suite = TestsuiteConfig.build_testsuite(include_exceptions = true)
+    exceptions_path = joinpath(@__DIR__, "..", "optin", "exceptions_basic.jl")
 
     @test haskey(core_suite, "core/simple_cxx")
     @test !haskey(core_suite, "optin/exceptions_basic")
@@ -25,4 +26,11 @@ end
     @test !haskey(extended_suite, "optin/exceptions_basic")
 
     @test haskey(exceptions_suite, "optin/exceptions_basic")
+    if isfile(exceptions_path)
+        entry_text = sprint(show, exceptions_suite["optin/exceptions_basic"])
+        @test occursin("include", entry_text)
+        @test occursin("exceptions_basic.jl", entry_text)
+    else
+        @test_throws ErrorException Base.eval(Main, exceptions_suite["optin/exceptions_basic"])
+    end
 end
