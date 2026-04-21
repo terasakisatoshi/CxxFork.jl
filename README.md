@@ -28,12 +28,13 @@ julia> using Cxx
 
 - `macOS arm64` is the primary implementation target right now.
 - `Linux` and `Windows` are wired into CI as smoke targets, but are not yet feature-complete validation targets.
-- The legacy C++ REPL pane, eager exception hook setup, and eager PCH generation are disabled by default in the modernized load path.
+- The legacy C++ REPL pane and eager PCH generation are disabled by default in the modernized load path.
+- C++ exception translation remains unsupported on the Julia 1.12 baseline. The old exception hook path still exists behind an environment flag, but current builds do not reliably translate C++ exceptions into Julia exceptions.
 
 Optional environment flags:
 
 - `CXX_ENABLE_REPL=1` enables the experimental C++ REPL integration
-- `CXX_ENABLE_EXCEPTIONS=1` enables exception callback setup
+- `CXX_ENABLE_EXCEPTIONS=1` attempts to enable the legacy exception callback setup for debugging, but this path is not currently supported on Julia 1.12
 - `CXX_ENABLE_PCH=1` enables eager PCH generation
 
 These are off by default because they are not yet part of the stable Julia 1.12 baseline.
@@ -89,6 +90,8 @@ Today the extended lane adds:
 - `extended/std_vector_wrappers` for verified `std::vector<std::string>` and `std::vector<bool>` read/wrap/Julia conversion paths
 
 Additional non-core suites should land here only after they are stable enough to validate continuously on `macOS arm64`.
+
+There is currently no supported exception-specific validation lane. Leave `CXX_ENABLE_EXCEPTIONS` disabled unless you are debugging the legacy exception runtime.
 
 The test driver uses [`ParallelTestRunner.jl`](https://github.com/JuliaTesting/ParallelTestRunner.jl).
 
