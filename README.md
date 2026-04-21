@@ -5,9 +5,9 @@ CxxFork.jl is a maintained fork of `JuliaInterop/Cxx.jl` for modern Julia toolch
 ## Status
 
 - Minimum supported Julia: `1.12`
-- Verified locally: `macOS arm64` with `Pkg.build()`, `using Cxx`, and `Pkg.test()`
+- Verified locally: `macOS arm64` with `Pkg.build()`, `using Cxx`, the baseline `Pkg.test()` lane, and the opt-in extended lane
 - CI smoke target: `Linux` and `Windows` with `Pkg.build()` and `using Cxx`
-- Current CI intent: keep macOS arm64 on the full test lane, keep Linux/Windows on smoke until broader runtime coverage is stabilized
+- Current CI intent: keep `macOS arm64` on a baseline lane plus a smaller extended lane, and keep Linux/Windows on smoke until broader runtime coverage is stabilized
 
 This repository is still a low-level C++/Julia integration package built on Clang/LLVM internals. Expect platform-sensitive behavior and prefer small, explicit validation steps when upgrading Julia, LLVM, or SDK versions.
 
@@ -60,17 +60,31 @@ julia --project=. --compiled-modules=no -e 'using Cxx'
 julia --project=. -e 'using Pkg; Pkg.test()'
 ```
 
+The default `Pkg.test()` command runs the baseline lane only.
+
 To run the smoke-only path explicitly:
 
 ```bash
 julia --project=. --compiled-modules=no -e 'using Cxx'
 ```
 
-To run the focused core runtime lane:
+To run the focused baseline subset explicitly:
 
 ```bash
 julia --project=. -e 'using Pkg; Pkg.test(test_args=["core/simple_cxx","--jobs=1"])'
 ```
+
+To run the current extended lane:
+
+```bash
+julia --project=. -e 'using Pkg; Pkg.test(test_args=["extended","--jobs=1"])'
+```
+
+Today the extended lane adds:
+
+- `extended/ctest` for the C compiler mode path
+
+Additional non-core suites should land here only after they are stable enough to validate continuously on `macOS arm64`.
 
 The test driver uses [`ParallelTestRunner.jl`](https://github.com/JuliaTesting/ParallelTestRunner.jl).
 
