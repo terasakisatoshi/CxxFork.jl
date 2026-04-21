@@ -83,6 +83,7 @@ julia --project=. -e 'using Pkg; Pkg.test(test_args=["extended","--jobs=1"])'
 Today the extended lane adds:
 
 - `extended/ctest` for the C compiler mode path
+- `extended/std_map_basic` for verified `std::map` length and iteration on `std::string` and `int32_t` key/value pairs
 - `extended/std_string` for verified `std::string` <-> Julia `String` conversions
 - `extended/std_vector_basic` for verified `std::vector<int32_t>` creation, push, indexing, wrapping, and Julia `Vector{Int32}` conversion
 - `extended/std_vector_wrappers` for verified `std::vector<std::string>` and `std::vector<bool>` read/wrap/Julia conversion paths

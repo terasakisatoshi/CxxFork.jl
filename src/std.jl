@@ -99,14 +99,14 @@ Base.push!(v::StdVector,i) = icxx"$v.push_back($i);"
 Base.resize!(v::StdVector, n) = icxx"$v.resize($n);"
 
 function Base.iterate(map::GenericStdMap, i = icxx"$map.begin();")
-    if icxx"$i == $map.end();"
+    if icxx"return $i == $map.end();"
         return nothing
     end
-    v = icxx"$i->first;" => icxx"$i->second;"
+    v = icxx"return $i->first;" => icxx"return $i->second;"
     icxx"++$i;"
     (v,i)
 end
-Base.length(map::GenericStdMap) = icxx"$map.size();"
+Base.length(map::GenericStdMap) = Int(icxx"return $map.size();")
 Base.eltype(::Type{StdMap{K,V}}) where {K,V} = Pair{K,V}
 
 Base.pointer(v::StdVector) = pointer(v, 0)
