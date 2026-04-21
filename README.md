@@ -85,6 +85,7 @@ Today the extended lane adds:
 - `extended/ctest` for the C compiler mode path
 - `extended/std_string` for verified `std::string` <-> Julia `String` conversions
 - `extended/std_vector_basic` for verified `std::vector<int32_t>` creation, push, indexing, wrapping, and Julia `Vector{Int32}` conversion
+- `extended/std_vector_wrappers` for verified `std::vector<std::string>` and `std::vector<bool>` read/wrap/Julia conversion paths
 
 Additional non-core suites should land here only after they are stable enough to validate continuously on `macOS arm64`.
 
