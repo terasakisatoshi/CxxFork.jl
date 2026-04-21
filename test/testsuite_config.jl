@@ -14,6 +14,7 @@ function extended_testsuite()
     Dict(
         "extended/ctest" => :(include(joinpath(@__DIR__, "ctest.jl"))),
         "extended/std_string" => :(include(joinpath(@__DIR__, "extended", "std_string.jl"))),
+        "extended/std_vector_basic" => :(include(joinpath(@__DIR__, "extended", "std_vector_basic.jl"))),
     )
 end
 

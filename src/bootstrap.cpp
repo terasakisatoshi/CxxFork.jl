@@ -1832,14 +1832,9 @@ JL_DLLEXPORT void cleanup_cpp_env(CxxInstance *Cxx, cppcall_state_t *state)
     Cxx->CI->getSema().DefineUsedVTables();
     Cxx->CI->getSema().PerformPendingInstantiations(false);
     Cxx->CGM->Release();
-
-    // Set all functions and globals to external linkage (MCJIT needs this ugh)
-    auto &jl_Module = Cxx->CGM->getModule();
-    for(auto I = jl_Module.global_begin(), E = jl_Module.global_end(); I != E; ++I) {
-       I->setLinkage(llvm::GlobalVariable::ExternalLinkage);
-    }
-
-    Function *F = Cxx->CGF->CurFn;
+    // Keep runtime-generated globals at their natural linkage. Promoting every
+    // symbol to external linkage causes duplicate JIT symbols for libc++ RTTI
+    // and string literal globals when the same templates are instantiated again.
 
     // cleanup the environment
     Cxx->CGF->EHResumeBlock = nullptr;
