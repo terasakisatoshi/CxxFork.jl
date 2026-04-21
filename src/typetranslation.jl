@@ -253,7 +253,7 @@ function cpptype(C,p::Type{CppPtr{T,CVR}}) where {T,CVR}
     addQualifiers(pointerTo(C,cpptype(C,T)),CVR)
 end
 function cpptype(C,p::Type{CxxQualType{T,CVR}}) where {T,CVR}
-    addQualifiers(typeForDecl(cppdecl(C,T)),CVR)
+    addQualifiers(cpptype(C,T),CVR)
 end
 # This is a hack, we should find a better way to do this
 function cpptype(C,p::Type{CxxQualType{T,CVR}}) where {T<:CppLambda,CVR}
@@ -407,6 +407,17 @@ const KindTemplateExpansion = 6
 const KindExpression        = 7
 const KindPack              = 8
 
+template_arg_is_qualified_type(T::Type) = T <: CxxQualType
+template_arg_is_qualified_type(T) = false
+
+function preserve_template_argument_cvr(T, clangT::QualType, quoted)
+    CVR = extractCVR(clangT)
+    if CVR == NullCVR || template_arg_is_qualified_type(T)
+        return T
+    end
+    quoted ? :(CxxQualType{$T,$CVR}) : CxxQualType{T,CVR}
+end
+
 function getTemplateParameters(cxxd,quoted = false,typeargs = Dict{Int64,Cvoid}())
     targt = Tuple{}
     if isa(cxxd, pcpp"clang::TemplateSpecializationType")
@@ -423,7 +434,9 @@ function getTemplateParameters(cxxd,quoted = false,typeargs = Dict{Int64,Cvoid}(
     for i = 0:(getTargsSize(targs)-1)
         kind = getTargKindAtIdx(targs,i)
         if kind == KindType
-            T = juliatype(getTargTypeAtIdx(targs,i),quoted,typeargs; wrapvalue = false)
+            clangT = getTargTypeAtIdx(targs,i)
+            T = juliatype(clangT,quoted,typeargs; wrapvalue = false)
+            T = preserve_template_argument_cvr(T, clangT, quoted)
             push!(args,T)
         elseif kind == KindIntegral
             val = getTargAsIntegralAtIdx(targs,i)
