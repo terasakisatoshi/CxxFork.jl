@@ -20,17 +20,9 @@ function extended_testsuite()
     )
 end
 
-function suite_entry(path::AbstractString, missing_message::AbstractString)
-    isfile(path) ? :(include($path)) : :(throw(ErrorException($missing_message)))
-end
-
 function exception_testsuite()
-    path = joinpath(@__DIR__, "optin", "exceptions_basic.jl")
     Dict(
-        "optin/exceptions_basic" => suite_entry(
-            path,
-            "test/optin/exceptions_basic.jl is not present yet; enable the exceptions lane only after that test file lands",
-        ),
+        "optin/exceptions_basic" => :(include(joinpath(@__DIR__, "optin", "exceptions_basic.jl"))),
     )
 end
 
