@@ -20,16 +20,24 @@ function extended_testsuite()
     )
 end
 
-function build_testsuite(; include_extended::Bool = false)
+function exception_testsuite()
+    Dict(
+        "optin/exceptions_basic" => :(include(joinpath(@__DIR__, "optin", "exceptions_basic.jl"))),
+    )
+end
+
+function build_testsuite(; include_extended::Bool = false, include_exceptions::Bool = false)
     testsuite = core_testsuite()
     include_extended && merge!(testsuite, extended_testsuite())
+    include_exceptions && merge!(testsuite, exception_testsuite())
     testsuite
 end
 
 function normalize_runner_args(args::AbstractVector{<:AbstractString})
     include_extended = any(==("extended"), args)
-    passthrough_args = filter(!=("extended"), collect(args))
-    return include_extended, passthrough_args
+    include_exceptions = any(==("exceptions"), args)
+    passthrough_args = filter(arg -> arg != "extended" && arg != "exceptions", collect(args))
+    return include_extended, include_exceptions, passthrough_args
 end
 
 end
