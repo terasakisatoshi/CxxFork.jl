@@ -42,14 +42,14 @@ struct CppExpr{T,targs}; end
 # Force cast the data portion of a jl_value_t to the given C++
 # type
 struct JLCppCast{T,JLT}
-    data::JLT
+    data::Ptr{Cvoid}
 end
 @generated function JLCppCast{T}(data::JLT) where {T,JLT}
-    JLT.mutable ||
+    Base.ismutabletype(JLT) ||
         error("Can only pass pointers to mutable values. " *
               "To pass immutables, use an array instead.")
     quote
-        JLCppCast{T,JLT}(data)
+        JLCppCast{T,JLT}(pointer_from_objref(data))
     end
 end
 
@@ -422,6 +422,7 @@ function _julia_to_llvm(@nospecialize x)
     ty = pcpp"llvm::Type"(ccall(:jl_type_to_llvm, Ptr{Cvoid}, (Any, Ptr{Cvoid}, Ref{Bool}), x, jl_get_llvmc(), isboxed))
     (isboxed[], ty)
 end
+_julia_to_llvm(::Type{JLCppCast{T,JLT}}) where {T,JLT} = _julia_to_llvm(Ptr{Cvoid})
 function julia_to_llvm(@nospecialize x)
     isboxed, ty = _julia_to_llvm(x)
     isboxed ? getPRJLValueTy() : ty
@@ -743,8 +744,8 @@ function createReturn(C,builder,f,argt,llvmargt,llvmrt,rett,rt,ret,state; argidx
             arg = symargs[i]
         end
         if argt[j] <: JLCppCast
-            push!(args2,:($arg.data))
-            argt[j] = CppPtr{argt[i].parameters[1]}
+            push!(args2, :($arg.data))
+            argt[j] = Ptr{Cvoid}
         else
             push!(args2,arg)
         end
