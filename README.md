@@ -6,8 +6,8 @@ CxxFork.jl is a maintained fork of `JuliaInterop/Cxx.jl` for modern Julia toolch
 
 - Minimum supported Julia: `1.12`
 - Verified locally: `macOS arm64` with `Pkg.build()`, `using Cxx`, the baseline `Pkg.test()` lane, and the opt-in extended lane
-- CI smoke target: `Linux` and `Windows` with `Pkg.build()` and `using Cxx`
-- Current CI intent: keep `macOS arm64` on a baseline lane plus a smaller extended lane, and keep Linux/Windows on smoke until broader runtime coverage is stabilized
+- CI smoke target: `Linux` with `Pkg.build()` and `using Cxx`
+- Current CI intent: keep `macOS arm64` on a baseline lane plus a smaller extended lane, keep Linux on smoke, and treat Windows as deferred smoke-support work until broader runtime coverage is stabilized
 
 This repository is still a low-level C++/Julia integration package built on Clang/LLVM internals. Expect platform-sensitive behavior and prefer small, explicit validation steps when upgrading Julia, LLVM, or SDK versions.
 
@@ -27,7 +27,9 @@ julia> using Cxx
 ## Platform Notes
 
 - `macOS arm64` is the primary implementation target right now.
-- `Linux` and `Windows` are wired into CI as smoke targets, but are not yet feature-complete validation targets.
+- `Linux` is wired into CI as a smoke target.
+- `Windows` remains a deferred smoke-support target and is not currently part of the active workflow.
+- Advanced interop support on the Julia `1.12` baseline is intentionally narrow: C compiler mode and `jpcpp"..."` mutable-struct pointer bridging are the verified subset, while `@cxxm` currently reports an explicit unsupported error.
 - The legacy C++ REPL pane and eager PCH generation are disabled by default in the modernized load path.
 - C++ exception translation remains unsupported on the Julia 1.12 baseline. The old exception hook path still exists behind an environment flag, but current builds do not reliably translate C++ exceptions into Julia exceptions.
 
@@ -84,6 +86,8 @@ julia --project=. -e 'using Pkg; Pkg.test(test_args=["extended","--jobs=1"])'
 Today the extended lane adds:
 
 - `extended/ctest` for the C compiler mode path
+- `extended/cxxm_basic` for the explicit Julia `1.12` unsupported diagnostic on `@cxxm`
+- `extended/jpcpp_basic` for verified Julia mutable-struct to C++ record-pointer bridging through `jpcpp"..."`
 - `extended/std_map_basic` for verified `std::map<std::string, std::string>` value/reference length and Julia `String` iteration, plus `std::map<int32_t, int32_t>` length/iteration coverage
 - `extended/std_string` for verified `std::string` <-> Julia `String` conversions
 - `extended/std_vector_basic` for verified `std::vector<int32_t>` creation, push, indexing, wrapping, and Julia `Vector{Int32}` conversion
@@ -141,7 +145,7 @@ julia_function()
 
 - The package still relies on internal Julia, Clang, and LLVM interfaces.
 - CI may emit non-fatal LLVM module flag warnings during runtime-generated `llvmcall` paths.
-- Linux and Windows are currently smoke-tested rather than fully runtime-validated.
+- Linux is currently smoke-tested rather than fully runtime-validated, and Windows remains a deferred smoke-support target.
 - If `Pkg.test()` fails on a non-macOS platform, first check whether `Pkg.build()` and `using Cxx` succeed independently.
 
 ## Repository Development
