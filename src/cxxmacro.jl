@@ -247,6 +247,12 @@ function get_llvmf_for_FD(C,jf,FD)
 end
 
 macro cxxm(str,expr)
+    if VERSION >= v"1.12"
+        return esc(quote
+            error("@cxxm is not supported on the Julia 1.12 baseline in this build. " *
+                  "Use `cxx\"\"\"...\"\"\"` plus `@cxx`/`icxx` instead.")
+        end)
+    end
     f = gensym()
     FD = gensym()
     RT = gensym()

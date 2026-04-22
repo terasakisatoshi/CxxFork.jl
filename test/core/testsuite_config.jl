@@ -17,8 +17,10 @@ end
     @test haskey(core_suite, "core/simple_cxx")
     @test !haskey(core_suite, "extended/ctest")
     @test !haskey(core_suite, "extended/jpcpp_basic")
+    @test !haskey(core_suite, "extended/cxxm_basic")
 
     @test haskey(extended_suite, "core/simple_cxx")
     @test haskey(extended_suite, "extended/ctest")
     @test haskey(extended_suite, "extended/jpcpp_basic")
+    @test haskey(extended_suite, "extended/cxxm_basic")
 end
