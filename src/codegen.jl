@@ -42,14 +42,14 @@ struct CppExpr{T,targs}; end
 # Force cast the data portion of a jl_value_t to the given C++
 # type
 struct JLCppCast{T,JLT}
-    data::Ptr{Cvoid}
+    data::JLT
 end
 @generated function JLCppCast{T}(data::JLT) where {T,JLT}
     Base.ismutabletype(JLT) ||
         error("Can only pass pointers to mutable values. " *
               "To pass immutables, use an array instead.")
     quote
-        JLCppCast{T,JLT}(pointer_from_objref(data))
+        JLCppCast{T,JLT}(data)
     end
 end
 
@@ -744,7 +744,7 @@ function createReturn(C,builder,f,argt,llvmargt,llvmrt,rett,rt,ret,state; argidx
             arg = symargs[i]
         end
         if argt[j] <: JLCppCast
-            push!(args2, :($arg.data))
+            push!(args2, :(pointer_from_objref($arg.data)))
             argt[j] = Ptr{Cvoid}
         else
             push!(args2,arg)
