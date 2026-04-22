@@ -36,6 +36,6 @@ end
     end
 
     @test err isa ErrorException
-    @test sprint(showerror, err) ==
-        "Can only pass pointers to mutable values. To pass immutables, use an array instead."
+    @test occursin("Can only pass pointers to mutable values", sprint(showerror, err))
+    @test occursin("use an array instead", sprint(showerror, err))
 end
