@@ -58,9 +58,8 @@ end
             filter!(i -> i < 3, cxx_float_v)
             @test collect(cxx_float_v)::Vector{Float32} == Float32[1.1, 2.2]
 
-            # FIXME: Currently throws a MethodError
-            # deleteat!(cxx_float_v, 1)
-            # @test collect(cxx_float_v)::Vector{Float32} == Float32[1.1]
+            deleteat!(cxx_float_v, 1)
+            @test collect(cxx_float_v)::Vector{Float32} == Float32[1.1]
         end
     end
 

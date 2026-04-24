@@ -98,8 +98,19 @@ end
     _setindex_conv!(v, val, i)
 
 
-Base.deleteat!(v::StdVector,idxs::UnitRange) =
-    icxx"$(v).erase($(v).begin()+$(first(idxs)),$(v).begin()+$(last(idxs)));"
+function Base.deleteat!(v::StdVector, idx::Integer)
+    @boundscheck checkbounds(v, idx)
+    icxx"$(v).erase($(v).begin()+$(idx)); void();"
+    return v
+end
+
+function Base.deleteat!(v::StdVector, idxs::UnitRange{<:Integer})
+    isempty(idxs) && return v
+    @boundscheck checkbounds(v, first(idxs))
+    @boundscheck checkbounds(v, last(idxs))
+    icxx"$(v).erase($(v).begin()+$(first(idxs)),$(v).begin()+$(last(idxs) + 1)); void();"
+    return v
+end
 Base.push!(v::StdVector,i) = icxx"$v.push_back($i);"
 Base.resize!(v::StdVector, n) = icxx"$v.resize($n);"
 
@@ -134,7 +145,7 @@ function Base.filter!(f, a::StdVector)
         end
     end
     if insrt < length(a)
-        deleteat!(a, insrt:length(a))
+        deleteat!(a, insrt:lastindex(a))
     end
     return a
 end
