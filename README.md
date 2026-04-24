@@ -100,7 +100,7 @@ Today the extended lane adds:
 - `extended/jpcpp_basic` for verified Julia mutable-struct to C++ record-pointer bridging through `jpcpp"..."`
 - `extended/std_map_basic` for verified `std::map<std::string, std::string>` value/reference length and Julia `String` iteration, plus `std::map<int32_t, int32_t>` length/iteration coverage
 - `extended/std_string` for verified `std::string` <-> Julia `String` conversions
-- `extended/std_vector_basic` for verified `std::vector<int32_t>` creation, push, indexing, wrapping, and Julia `Vector{Int32}` conversion
+- `extended/std_vector_basic` for verified `std::vector<int32_t>` creation, push, indexing, deletion, wrapping, and Julia `Vector{Int32}` conversion
 - `extended/std_vector_wrappers` for verified `std::vector<std::string>` and `std::vector<bool>` read/wrap/Julia conversion paths
 
 Additional non-core suites should land here only after they are stable enough to validate continuously on `macOS arm64`.
