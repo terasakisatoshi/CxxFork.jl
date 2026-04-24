@@ -126,14 +126,21 @@ int cxx_smoke_add(int x) {
 
 ## Legacy Examples
 
-Most of the historical Cxx.jl usage model still applies:
+The historical Cxx.jl examples are only partially supported on the Julia `1.12`
+baseline. The currently verified legacy-style paths are:
 
 - `@cxx foo(...)` for calling visible C++ functions
-- `@cxx obj->method(...)` for member calls
 - `cxx""" ... """` for declaring C++ code in the translation unit
 - `icxx""" ... """` for embedding C++ snippets inside Julia code
+- C++ enum access and calls to visible static C++ functions
 
-Example:
+The upstream `Using Cxx.jl` examples are tracked in
+[issue #27](https://github.com/terasakisatoshi/CxxFork.jl/issues/27). In
+particular, Julia expression splicing with `$:(...)` inside `cxx"""..."""` and
+member calls such as `@cxx obj->method(...)` are not currently part of the
+verified Julia `1.12` support surface.
+
+Examples:
 
 ```julia
 using Cxx
@@ -149,6 +156,26 @@ void mycppfunction() {
 
 julia_function() = @cxx mycppfunction()
 julia_function()
+
+cxx"""
+void printme(int x) {
+    std::cout << x << std::endl;
+}
+"""
+
+@cxx printme(10)
+@assert icxx"1 + 2;" == 3
+
+cxx"""
+class Klassy {
+public:
+    enum Foo { Bar, Baz };
+    static Foo exec(Foo x) { return x; }
+};
+"""
+
+@assert (@cxx Klassy::Bar).val == 0
+@assert (@cxx Klassy::exec(@cxx(Klassy::Baz))).val == 1
 ```
 
 ## Known Caveats
