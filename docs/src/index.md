@@ -1,8 +1,8 @@
-# Cxx.jl - The Julia C++ FFI
+# CxxFork.jl - The Julia C++ FFI
 
-Cxx.jl is a Julia package that provides a C++ interoperability
-interface for Julia. It also provides an experimental C++ REPL
-mode for the Julia REPL.
+CxxFork.jl is a maintained fork of `JuliaInterop/Cxx.jl` for modern Julia
+toolchains. It provides a C++ interoperability interface for Julia and keeps the
+legacy experimental C++ REPL path available behind an opt-in environment flag.
 
 ## Functionality
 
@@ -16,17 +16,26 @@ See the API documentation for more details.
 
 ## Installation
 
-Now, this package provides an out-of-box installation experience on all 64-bit ["Tier 1"](https://github.com/JuliaLang/julia#currently-supported-platforms) platforms for Julia 1.1.
+The current baseline is Julia `1.12`. `macOS arm64` is the primary validated
+platform; Linux is smoke-tested with `Pkg.build()` and `using Cxx`; Windows is a
+deferred smoke-support target.
 
 ```julia
-pkg> add Cxx
+pkg> add https://github.com/terasakisatoshi/CxxFork.jl
+pkg> build Cxx
 ```
 
-Building the C++ code requires the same
-[system tools](https://github.com/JuliaLang/julia#required-build-tools-and-external-libraries)
-necessary for building Julia from source.
-Further, Debian/Ubuntu users should install `libedit-dev` and `libncurses5-dev`,
-and RedHat/CentOS users should install `libedit-devel`.
+Then:
+
+```julia
+julia> using Cxx
+```
+
+Building the native shim requires a working C/C++ toolchain and standard SDK or
+developer tools for the host platform. On macOS, install Command Line Tools or
+Xcode. During `Pkg.build()`, CxxFork records default C++ header paths and avoids
+macOS SDK libc++ headers known to require Clang builtins unsupported by the
+embedded Clang path.
 
 ## Contents
 
