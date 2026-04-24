@@ -53,6 +53,16 @@ Practical requirements:
 
 On macOS, Command Line Tools or Xcode must be installed. On Linux and Windows, expect the build to depend on the toolchain and SDK state exposed in CI.
 
+On macOS, `Pkg.build()` records a default set of C++ headers in `deps/path.jl`.
+When multiple SDKs are installed, CxxFork prefers an SDK whose libc++ headers are
+compatible with the embedded Clang path used by Julia/Cxx. This avoids selecting
+newer SDK headers that require Clang builtins unavailable to the embedded parser,
+such as unguarded `__builtin_ctzg` or `__builtin_clzg` references.
+
+If `using Cxx` fails while parsing macOS libc++ headers, rerun `Pkg.build()` and
+check `deps/path.jl` for `DEFAULT_CXXJL_HEADER_DIRS`. You can override the
+selection with `CXXJL_HEADER_DIRS` when you need to test a specific SDK.
+
 ## Validation
 
 Recommended local validation after making changes:
